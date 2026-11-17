@@ -210,8 +210,8 @@ def top_sellers(restaurant, start, end, limit=5):
             order__restaurant=restaurant, order__status="completed",
             order__created_at__date__gte=start, order__created_at__date__lte=end,
         ).exclude(kot_status="cancelled")
-        .values("name").annotate(qty=Sum("qty"), orders=Count("order", distinct=True), amount=Sum(F("price") * F("qty"), output_field=DecimalField(max_digits=14, decimal_places=2)))
-        .order_by("-qty")[:limit]
+        .values("name").annotate(sold=Sum("qty"), orders=Count("order", distinct=True), amount=Sum(F("price") * F("qty"), output_field=DecimalField(max_digits=14, decimal_places=2)))
+        .order_by("-sold")[:limit]
     )
 
 

@@ -55,7 +55,7 @@
       <div class="card-head"><h3>Top sellers today</h3></div>
       <div class="card-body" style="padding-top:6px;padding-bottom:6px">
         {% for t in top_sellers %}
-        <div class="rank"><span class="r-n">{{ forloop.counter }}</span><div><b>{{ t.name }}</b><div class="muted tiny">{{ t.qty }} sold</div></div><b class="right num">{{ t.amount|inr }}</b></div>
+        <div class="rank"><span class="r-n">{{ forloop.counter }}</span><div><b>{{ t.name }}</b><div class="muted tiny">{{ t.sold }} sold</div></div><b class="right num">{{ t.amount|inr }}</b></div>
         {% empty %}<p class="muted" style="padding:12px 0">No sales yet today.</p>{% endfor %}
       </div>
     </div>

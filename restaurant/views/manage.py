@@ -160,13 +160,13 @@ def reports(request):
 
     item_rows = list(
         OrderItem.objects.filter(order__in=completed).exclude(kot_status="cancelled")
-        .values("name").annotate(qty=Sum("qty"), orders=Count("order", distinct=True),
+        .values("name").annotate(sold=Sum("qty"), orders=Count("order", distinct=True),
                                  amount=Sum(F("price") * F("qty"), output_field=DecimalField(max_digits=14, decimal_places=2)))
         .order_by("-amount")
     )
     if request.GET.get("export") == "items":
-        rows = [["Item", "Quantity", "Orders", "Amount"]] + [[i["name"], i["qty"], i["orders"], i["amount"]] for i in item_rows]
-        rows += [[], ["Total quantity", sum(i["qty"] for i in item_rows)], ["Discounts", agg["disc"] or 0],
+        rows = [["Item", "Quantity", "Orders", "Amount"]] + [[i["name"], i["sold"], i["orders"], i["amount"]] for i in item_rows]
+        rows += [[], ["Total quantity", sum(i["sold"] for i in item_rows)], ["Discounts", agg["disc"] or 0],
                  ["Net sales", agg["sales"] or 0]]
         for p in payment_split(r, start, end):
             rows.append([p["method"], p["amount"]])
@@ -211,7 +211,7 @@ def reports(request):
         "service": agg["sc"] or 0, "guests": agg["guests"] or 0, "count": count,
         "avg": (agg["sales"] / count) if count and agg["sales"] else 0,
         "cancelled": orders.filter(status__in=["cancelled", "rejected"]).count(),
-        "items": item_rows, "total_qty": sum(i["qty"] for i in item_rows),
+        "items": item_rows, "total_qty": sum(i["sold"] for i in item_rows),
         "items_total": sum((i["amount"] or 0 for i in item_rows), 0),
         "split": split, "split_total": sum((p["amount"] for p in split), 0),
         "by_type": by_type, "by_source": by_source, "by_staff": by_staff,
