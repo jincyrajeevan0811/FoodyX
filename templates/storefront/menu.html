@@ -1,215 +1,457 @@
 {% extends "base.html" %}
-{% load foodyx_tags %}
+{% load static foodyx_tags %}
 {% block title %}{% if r.seo_title %}{{ r.seo_title }}{% else %}{{ r.name }} — {% if mode == "table" %}Menu · {{ table.name }}{% else %}Order online{% endif %}{% endif %}{% endblock %}
 {% block meta_description %}{% if r.seo_description %}{{ r.seo_description }}{% else %}Order from {{ r.name }}{% if r.city %} in {{ r.city }}{% endif %}. Browse the menu and order online.{% endif %}{% endblock %}
-{% block body_class %}store{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/store.css' %}">{% endblock %}
+{% block body_class %}gx{% endblock %}
 {% block body %}
-<header class="store-hero" {% if r.cover_url %}style="background-image:linear-gradient(150deg,rgba(5,38,32,.92),rgba(8,116,85,.85)),url('{{ r.cover_url }}');background-size:cover;background-position:center"{% endif %}>
-  <div class="container">
-    <div class="row">
-      {% if r.logo_url %}<img src="{{ r.logo_url }}" alt="" style="width:52px;height:52px;border-radius:14px;object-fit:cover;background:#fff">{% else %}<span class="brand-mark" style="width:52px;height:52px;border-radius:14px;font-size:22px">{{ r.name|slice:":1"|upper }}</span>{% endif %}
-      <div>
-        <h1>{{ r.name }}</h1>
-        <p>{% if r.tagline %}{{ r.tagline }}{% else %}{{ r.get_business_type_display }}{% if r.city %} · {{ r.city }}{% endif %}{% endif %}</p>
-      </div>
-      <button class="icon-btn right" data-theme-toggle aria-label="Dark mode" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff"><i data-lucide="moon"></i></button>
+<header class="gx-top">
+  <div class="gx-wrap">
+    {% if r.logo_url %}<img class="gx-logo" src="{{ r.logo_url }}" alt="">{% else %}<span class="gx-logo">{{ r.name|slice:":1"|upper }}</span>{% endif %}
+    <div class="gx-title">
+      <b>{{ r.name }}</b>
+      <small><span class="gx-open{% if not can_order %} off{% endif %}"></span>{% if can_order %}{% if mode == "table" %}Ordering open · {{ table.name }}{% else %}Open for orders{% endif %}{% else %}Menu only right now{% endif %}</small>
     </div>
-    <div class="store-pills">
-      {% if mode == "table" %}<span><i data-lucide="armchair" class="icon-sm"></i>{{ table.name }}</span>{% endif %}
-      {% if r.opening_hours %}<span><i data-lucide="clock" class="icon-sm"></i>{{ r.opening_hours }}</span>{% endif %}
-      {% if mode == "store" and delivery_ok %}<span><i data-lucide="bike" class="icon-sm"></i>Delivery{% if r.delivery_fee %} {{ r.delivery_fee|inr }}{% else %} free{% endif %}</span>{% endif %}
-      {% if mode == "store" %}<span><i data-lucide="shopping-bag" class="icon-sm"></i>Takeaway</span>{% endif %}
-      {% if r.phone %}<span><i data-lucide="phone" class="icon-sm"></i><a href="tel:{{ r.phone }}" style="color:inherit">{{ r.phone }}</a></span>{% endif %}
-    </div>
+    <span style="margin-left:auto"></span>
+    {% if mode == "table" and can_order %}<button class="gx-icon waiter" type="button" data-sheet="waiterSheet"><i data-lucide="bell-ring" class="icon-sm"></i>Waiter</button>{% endif %}
+    <button class="gx-icon" type="button" data-theme-toggle aria-label="Dark mode"><i data-lucide="sun-moon" class="icon-sm"></i></button>
   </div>
 </header>
 
-<div class="store-sticky">
-  <div class="container">
-    <div class="store-search">
-      <div class="input-icon" style="flex:1"><i data-lucide="search"></i><input type="search" id="q" placeholder="Search dishes"></div>
-      <label class="check small nowrap" style="padding-right:8px"><input type="checkbox" id="vegOnly"> Veg only</label>
+<main class="gx-wrap">
+  <section class="gx-hero{% if r.cover_url %} has-cover{% endif %}" {% if r.cover_url %}style="background-image:linear-gradient(135deg,rgba(49,46,129,.88),rgba(124,58,237,.75)),url('{{ r.cover_url }}')"{% endif %}>
+    <h1>{{ r.name }}</h1>
+    <p>{% if r.tagline %}{{ r.tagline }}{% else %}{{ r.get_business_type_display }}{% if r.city %} · {{ r.city }}{% endif %}{% endif %}</p>
+    <div class="gx-chips">
+      {% if r.opening_hours %}<span><i data-lucide="clock"></i>{{ r.opening_hours }}</span>{% endif %}
+      {% if mode == "store" %}<span><i data-lucide="shopping-bag"></i>Takeaway</span>{% if delivery_ok %}<span><i data-lucide="bike"></i>Delivery{% if r.delivery_fee %} {{ r.delivery_fee|inr }}{% else %} free{% endif %}</span>{% endif %}{% endif %}
+      {% if mode == "store" and r.min_order_amount %}<span><i data-lucide="wallet"></i>Min. order {{ r.min_order_amount|inr }}</span>{% endif %}
+      {% if r.phone %}<span><i data-lucide="phone"></i><a href="tel:{{ r.phone }}" style="color:inherit">{{ r.phone }}</a></span>{% endif %}
     </div>
-    <div class="chips mt-2" id="cats"></div>
-  </div>
-</div>
+    {% if mode == "table" %}<div class="gx-table"><i data-lucide="armchair" class="icon-sm"></i>You're at {{ table.name }}</div>{% endif %}
+  </section>
 
-<main class="container">
   {% if not can_order %}
-  <div class="alert alert-amber mt-2"><i data-lucide="info" class="icon-sm"></i><div>{% if mode == "table" %}Ordering from the table is off right now — browse the menu and tell our staff what you'd like.{% else %}Online ordering is closed right now. You can still browse the menu.{% endif %}</div></div>
+  <div class="gx-note"><i data-lucide="info" class="icon-sm"></i><div>{% if mode == "table" %}Ordering from the table is paused right now — browse the menu and tell our staff what you'd like.{% else %}Online ordering is closed right now. You can still browse the menu.{% endif %}</div></div>
   {% endif %}
+
   {% if my_orders %}
-  <div class="card card-pad mt-2" style="padding:14px 16px">
-    <div class="small strong mb-2">Your recent orders</div>
-    {% for o in my_orders %}<a class="row small" style="padding:5px 0;color:inherit" href="{% url 'storefront:track' o.public_id %}"><span>#{{ o.number }}</span>{% badge o.status o.get_status_display %}<span class="right card-link">Track →</span></a>{% endfor %}
+  <div class="gx-recent">
+    {% for o in my_orders %}
+    <a href="{% url 'storefront:track' o.public_id %}"><span class="gx-pulse"></span><span><b>Order #{{ o.number }}</b><span class="muted small">{{ o.get_status_display }}</span></span><i data-lucide="chevron-right" class="icon-sm muted"></i></a>
+    {% endfor %}
   </div>
   {% endif %}
-  {% if mode == "table" and can_order %}
-  <form method="post" action="{% url 'storefront:call_waiter' table.qr_token %}" class="mt-2" id="callForm">{% csrf_token %}
-    <button class="btn btn-outline btn-block"><i data-lucide="hand" class="icon-sm"></i>Call a waiter</button>
-  </form>
+
+  {% if offers and can_order %}
+  <div class="gx-offers">
+    {% for c in offers %}
+    <button class="gx-offer" type="button" data-coupon="{{ c.code }}">
+      <span class="o-ico"><i data-lucide="badge-percent" class="icon-sm"></i></span>
+      <span><b>{% if c.discount_type == "percent" %}{{ c.value|floatformat:"-2" }}% off{% else %}{{ c.value|inr }} off{% endif %}{% if c.min_order %} above {{ c.min_order|inr }}{% endif %}</b><small>Use code {{ c.code }}</small></span>
+    </button>
+    {% endfor %}
+  </div>
   {% endif %}
+
+  <div class="gx-bar">
+    <label class="gx-search"><i data-lucide="search" class="icon-sm"></i><input type="search" id="q" placeholder="Search for dishes" autocomplete="off"></label>
+    <div class="gx-filters">
+      <button class="gx-filter" type="button" data-filter="veg"><span class="food-dot veg"></span>Veg</button>
+      <button class="gx-filter" type="button" data-filter="non_veg"><span class="food-dot nonveg"></span>Non-veg</button>
+      <button class="gx-filter" type="button" data-filter="best"><i data-lucide="star" class="icon-sm"></i>Bestsellers</button>
+      <button class="gx-filter" type="button" data-filter="budget"><i data-lucide="indian-rupee" class="icon-sm"></i>Under ₹200</button>
+    </div>
+    <div class="gx-cats" id="cats"></div>
+  </div>
+
+  <div id="specials"></div>
   <div id="menu"></div>
-  <div class="empty hide" id="noResults"><div class="em-ico"><i data-lucide="search-x"></i></div><b>No dishes found</b></div>
+  <div class="gx-empty hide" id="noResults"><div class="em-ico"><i data-lucide="search-x"></i></div><b>No dishes match</b><div class="small">Try a different word or clear the filters.</div></div>
+  <p class="center muted tiny mt-4">Prices in ₹{% if bill.gst %} · GST {{ bill.gst|floatformat:"-2" }}% added at checkout{% endif %} · Powered by {{ site_name }}</p>
 </main>
 
 {% if can_order %}
-<div class="cart-bar hide" id="cartBar">
-  <div><b id="cartCount">0 items</b><small id="cartTotal">₹0</small></div>
-  <button class="btn btn-lime right" data-open="checkout">View cart <i data-lucide="arrow-right" class="icon-sm"></i></button>
-</div>
+<button class="gx-cartbar" id="cartBar" type="button" data-sheet="cartSheet">
+  <span><b id="cartCount">0 items</b><small id="cartTotal">₹0</small></span>
+  <span class="go">View cart <i data-lucide="arrow-right" class="icon-sm"></i></span>
+</button>
+{% endif %}
 
-<dialog class="modal" id="checkout">
-  <form method="post" action="{{ post_url }}" id="checkoutForm">
+<div class="gx-overlay" id="overlay"></div>
+
+<!-- dish details -->
+<section class="gx-sheet" id="dishSheet" aria-hidden="true">
+  <div class="gx-grip"></div>
+  <div class="gx-sheet-body gx-detail" id="dishBody"></div>
+  {% if can_order %}
+  <div class="gx-sheet-foot row">
+    <div class="gx-qty"><button type="button" data-dq="-1">−</button><span id="dqVal">1</span><button type="button" data-dq="1">+</button></div>
+    <button class="gx-place" type="button" id="dishAdd" style="flex:1"><span>Add item</span><span id="dishAddPrice">₹0</span></button>
+  </div>
+  {% endif %}
+</section>
+
+{% if can_order %}
+<!-- cart & checkout -->
+<section class="gx-sheet" id="cartSheet" aria-hidden="true">
+  <div class="gx-grip"></div>
+  <div class="gx-sheet-head"><h3>Your order</h3><span class="pill" id="sheetCount">0 items</span><button class="gx-icon" type="button" data-close-sheet style="margin-left:auto" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button></div>
+  <form method="post" action="{{ post_url }}" id="checkoutForm" style="display:contents">
     {% csrf_token %}
     <input type="hidden" name="cart" id="cartInput">
-    <div class="modal-head"><h3>Your order</h3><button class="icon-btn x" type="button" data-close><i data-lucide="x"></i></button></div>
-    <div class="modal-body">
+    <div class="gx-sheet-body">
       <div id="sheetLines"></div>
-      <div class="row mt-2"><b>Item total</b><b class="right num" id="sheetTotal">₹0</b></div>
+      <button type="button" class="btn btn-ghost btn-sm mt-1" data-close-sheet><i data-lucide="plus" class="icon-sm"></i>Add more items</button>
+
       {% if mode == "store" %}
-        <div class="tabs mt-3 w-100" style="width:100%">
-          <label class="tab active" style="flex:1;justify-content:center"><input type="radio" name="order_type" value="takeaway" checked hidden> <i data-lucide="shopping-bag" class="icon-sm"></i>Takeaway</label>
-          {% if delivery_ok %}<label class="tab" style="flex:1;justify-content:center"><input type="radio" name="order_type" value="delivery" hidden> <i data-lucide="bike" class="icon-sm"></i>Delivery</label>{% endif %}
+      <div class="gx-block">
+        <span class="label">How would you like it?</span>
+        <div class="gx-seg">
+          <label class="gx-opt on"><input type="radio" name="order_type" value="takeaway" checked><span class="o-ico"><i data-lucide="shopping-bag" class="icon-sm"></i></span><span>Takeaway<small>Pick up at the counter</small></span></label>
+          {% if delivery_ok %}<label class="gx-opt"><input type="radio" name="order_type" value="delivery"><span class="o-ico"><i data-lucide="bike" class="icon-sm"></i></span><span>Delivery<small>{% if r.delivery_fee %}{{ r.delivery_fee|inr }} fee{% else %}Free delivery{% endif %}</small></span></label>{% endif %}
         </div>
-        <div class="form-grid mt-3" style="gap:10px">
-          <input type="text" name="name" placeholder="Your name" required>
-          <input type="tel" name="phone" placeholder="Mobile number" required pattern="[0-9+ ]{10,15}">
-          <textarea name="address" class="full hide" id="addr" rows="2" placeholder="Delivery address with landmark"></textarea>
-          <input type="text" name="coupon" placeholder="Coupon code (optional)" class="full" style="text-transform:uppercase">
-          <input type="text" name="note" placeholder="Note for the kitchen (optional)" class="full">
+      </div>
+      <div class="gx-block">
+        <span class="label">Your details</span>
+        <div class="gx-stack">
+          <input type="text" name="name" placeholder="Full name" required autocomplete="name">
+          <input type="tel" name="phone" placeholder="Mobile number" required pattern="[0-9+ ]{10,15}" autocomplete="tel" inputmode="tel">
+          <textarea name="address" id="addr" class="hide" rows="2" placeholder="House no., street, landmark" autocomplete="street-address"></textarea>
         </div>
-        {% if delivery_ok and r.delivery_fee %}<p class="muted small mt-1 hide" id="feeNote">Delivery fee {{ r.delivery_fee|inr }} is added to the bill.</p>{% endif %}
-        {% if r.min_order_amount %}<p class="muted small mt-1">Minimum order {{ r.min_order_amount|inr }}.</p>{% endif %}
-        <div class="label mt-3">Payment</div>
-        <div class="stack mt-1" style="gap:8px">
-          {% if pay_online %}<label class="check"><input type="radio" name="payment" value="online" checked> Pay online now (UPI, card)</label>{% endif %}
-          <label class="check"><input type="radio" name="payment" value="counter" {% if not pay_online %}checked{% endif %}> Pay at pickup</label>
-          {% if delivery_ok and r.accept_cash_on_delivery %}<label class="check hide" id="codOpt"><input type="radio" name="payment" value="cod"> Cash on delivery</label>{% endif %}
+      </div>
+      <div class="gx-block">
+        <span class="label">Offers</span>
+        <div class="gx-coupon"><input type="text" name="coupon" id="couponInput" placeholder="Enter coupon code"><button type="button" class="btn btn-soft" id="applyCoupon">Apply</button></div>
+        <div class="small mt-1" id="couponMsg"></div>
+      </div>
+      <div class="gx-block">
+        <span class="label">Payment</span>
+        <div class="gx-stack" id="payOpts">
+          {% if pay_online %}<label class="gx-opt on"><input type="radio" name="payment" value="online" checked><span class="o-ico"><i data-lucide="smartphone" class="icon-sm"></i></span><span>Pay online now<small>UPI, cards, netbanking</small></span></label>{% endif %}
+          <label class="gx-opt{% if not pay_online %} on{% endif %}" id="counterOpt"><input type="radio" name="payment" value="counter" {% if not pay_online %}checked{% endif %}><span class="o-ico"><i data-lucide="store" class="icon-sm"></i></span><span>Pay at pickup<small>Cash, UPI or card at the counter</small></span></label>
+          {% if delivery_ok and r.accept_cash_on_delivery %}<label class="gx-opt hide" id="codOpt"><input type="radio" name="payment" value="cod"><span class="o-ico"><i data-lucide="banknote" class="icon-sm"></i></span><span>Cash on delivery<small>Pay the rider</small></span></label>{% endif %}
         </div>
+      </div>
       {% else %}
-        <div class="form-grid mt-3" style="gap:10px">
-          <input type="text" name="name" placeholder="Your name (optional)">
-          <input type="tel" name="phone" placeholder="Mobile (optional)">
-          <input type="text" name="note" placeholder="Note for the kitchen (optional)" class="full">
+      <div class="gx-block">
+        <span class="label">Your details <span class="muted" style="font-weight:500">(optional)</span></span>
+        <div class="gx-stack">
+          <input type="text" name="name" placeholder="Name" autocomplete="name">
+          <input type="tel" name="phone" placeholder="Mobile — for order updates & rewards" autocomplete="tel" inputmode="tel">
         </div>
-        <p class="muted small mt-2">Your order goes to {{ table.name }}. You'll pay at the table when you're done.</p>
+      </div>
       {% endif %}
+      <div class="gx-block">
+        <span class="label">Note for the kitchen</span>
+        <input type="text" name="note" placeholder="Allergies, spice level, cutlery…" maxlength="250">
+      </div>
+
+      <div class="gx-bill" id="billBox"></div>
+      {% if mode == "table" %}<p class="muted small mt-2"><i data-lucide="info" class="icon-sm" style="vertical-align:-3px"></i> Your order goes to the kitchen for {{ table.name }}. Pay at the table when you're done.</p>{% endif %}
     </div>
-    <div class="modal-foot"><button class="btn btn-primary btn-lg btn-block" id="placeBtn">Place order · <span id="placeTotal">₹0</span></button></div>
+    <div class="gx-sheet-foot">
+      <button class="gx-place" id="placeBtn"><span>Place order</span><span id="placeTotal">₹0</span></button>
+    </div>
   </form>
-</dialog>
+</section>
 {% endif %}
+
+{% if mode == "table" and can_order %}
+<!-- call waiter -->
+<section class="gx-sheet" id="waiterSheet" aria-hidden="true">
+  <div class="gx-grip"></div>
+  <div class="gx-sheet-head"><h3>How can we help?</h3><button class="gx-icon" type="button" data-close-sheet style="margin-left:auto" aria-label="Close"><i data-lucide="x" class="icon-sm"></i></button></div>
+  <div class="gx-sheet-body">
+    <div class="gx-reasons" id="reasons" data-url="{% url 'storefront:call_waiter' table.qr_token %}">
+      <button class="gx-reason" type="button" data-reason="Call waiter"><span class="o-ico"><i data-lucide="hand"></i></span>Call waiter</button>
+      <button class="gx-reason" type="button" data-reason="Need water"><span class="o-ico"><i data-lucide="glass-water"></i></span>Water please</button>
+      <button class="gx-reason" type="button" data-reason="Ask for the bill"><span class="o-ico"><i data-lucide="receipt"></i></span>Ask for the bill</button>
+      <button class="gx-reason" type="button" data-reason="Need cutlery / tissues"><span class="o-ico"><i data-lucide="utensils"></i></span>Cutlery & tissues</button>
+    </div>
+    {% csrf_token %}
+    <p class="muted small mt-2 center">Our staff get a notification right away.</p>
+  </div>
+</section>
+{% endif %}
+
+<div class="gx-toast" id="toast"><i data-lucide="check-circle-2" class="icon-sm"></i><span></span></div>
+
 {{ menu|json_script:"menu-data" }}
+{{ bill|json_script:"bill-data" }}
+<script id="offer-data" type="application/json">[{% for c in offers %}{"code": "{{ c.code|escapejs }}", "type": "{{ c.discount_type }}", "value": {{ c.value|stringformat:"s" }}, "min": {{ c.min_order|stringformat:"s" }}, "max": {{ c.max_discount|stringformat:"s" }}}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function () {
+  "use strict";
   var data = JSON.parse(document.getElementById("menu-data").textContent);
+  var bill = JSON.parse(document.getElementById("bill-data").textContent);
+  var offers = JSON.parse(document.getElementById("offer-data").textContent);
   var canOrder = {% if can_order %}true{% else %}false{% endif %};
+  var mode = "{{ mode }}";
   var key = "fx-cart-{{ r.pk }}-{% if table %}{{ table.pk }}{% else %}store{% endif %}";
-  var cart = {};
-  try { cart = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { cart = {}; }
-  var byId = {}; data.items.forEach(function (m) { byId[m.id] = m; });
-  Object.keys(cart).forEach(function (id) { if (!byId[id]) delete cart[id]; });
-  var activeCat = "";
 
+  function money(n) { n = Math.round(Number(n || 0) * 100) / 100; return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
-  function save() { try { localStorage.setItem(key, JSON.stringify(cart)); } catch (e) {} }
+  function icons() { if (window.lucide) window.lucide.createIcons(); }
   function dot(t) { return '<span class="food-dot ' + (t === "non_veg" ? "nonveg" : t) + '"></span>'; }
+  function ph(m, extra) {
+    var g = "g" + (m.id % 5);
+    if (m.img) return '<div class="ph img ' + g + '" style="background-image:url(\'' + esc(m.img).replace(/'/g, "%27") + '\')"></div>';
+    return '<div class="ph ' + g + '">' + esc(m.name.charAt(0)) + "</div>";
+  }
 
-  var catBox = document.getElementById("cats");
-  var catsWithItems = data.categories.filter(function (c) { return data.items.some(function (m) { return m.cat === c.id; }); });
-  catBox.innerHTML = '<button class="chip active" data-cat="">All</button>' + catsWithItems.map(function (c) { return '<button class="chip" data-cat="' + c.id + '">' + esc(c.name) + "</button>"; }).join("");
-  catBox.addEventListener("click", function (e) {
-    var b = e.target.closest(".chip"); if (!b) return;
-    catBox.querySelectorAll(".chip").forEach(function (x) { x.classList.remove("active"); }); b.classList.add("active");
-    activeCat = b.getAttribute("data-cat"); render();
-    if (activeCat) { var t = document.getElementById("cat-" + activeCat); if (t) t.scrollIntoView({ behavior: "smooth" }); }
-  });
+  // ---------- state
+  var byId = {}; data.items.forEach(function (m) { byId[m.id] = m; });
+  var cart = {}, notes = {};
+  try { var saved = JSON.parse(localStorage.getItem(key) || "{}"); cart = saved.c || {}; notes = saved.n || {}; } catch (e) {}
+  Object.keys(cart).forEach(function (id) { if (!byId[id]) delete cart[id]; });
+  var filters = {}, coupon = null;
+  function save() { try { localStorage.setItem(key, JSON.stringify({ c: cart, n: notes })); } catch (e) {} }
 
-  function addBtn(m) {
+  var cats = data.categories.filter(function (c) { return data.items.some(function (m) { return m.cat === c.id; }); });
+  var others = data.items.filter(function (m) { return !cats.some(function (c) { return c.id === m.cat; }); });
+  if (others.length) cats.push({ id: "other", name: "More" });
+
+  // ---------- toast
+  var toastT;
+  function toast(msg) {
+    var t = document.getElementById("toast"); t.querySelector("span").textContent = msg; t.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, 1600);
+  }
+
+  // ---------- rendering
+  function addCtl(m) {
     if (!canOrder) return "";
     var q = cart[m.id] || 0;
-    if (!q) return '<button class="btn btn-soft btn-sm add" data-add="' + m.id + '">Add <i data-lucide="plus" class="icon-sm"></i></button>';
-    return '<div class="qty-ctrl add"><button data-dec="' + m.id + '">−</button><span>' + q + '</span><button data-add="' + m.id + '">+</button></div>';
+    if (!q) return '<button class="gx-addbtn" type="button" data-add="' + m.id + '">ADD <i data-lucide="plus" class="icon-sm"></i></button>';
+    return '<div class="gx-step"><button type="button" data-dec="' + m.id + '">−</button><span>' + q + '</span><button type="button" data-add="' + m.id + '">+</button></div>';
+  }
+  function matches(m) {
+    var q = (document.getElementById("q").value || "").toLowerCase().trim();
+    if (q && m.name.toLowerCase().indexOf(q) < 0 && (m.desc || "").toLowerCase().indexOf(q) < 0) return false;
+    if (filters.veg && m.type !== "veg") return false;
+    if (filters.non_veg && m.type === "veg") return false;
+    if (filters.best && !m.featured) return false;
+    if (filters.budget && m.price >= 200) return false;
+    return true;
+  }
+  function dishRow(m) {
+    return '<div class="gx-dish" data-open="' + m.id + '"><div class="d-info"><div class="d-meta">' + dot(m.type) +
+      (m.featured ? '<span class="gx-tag"><i data-lucide="star" class="icon-sm"></i>Bestseller</span>' : "") + "</div>" +
+      "<h4>" + esc(m.name) + '</h4><div class="d-price">' + money(m.price) + "</div>" +
+      (m.desc ? "<p>" + esc(m.desc) + "</p>" : "") +
+      (m.prep ? '<div class="d-meta mt-1"><span class="gx-tag time"><i data-lucide="timer" class="icon-sm"></i>' + m.prep + " min</span></div>" : "") +
+      '</div><div class="d-media">' + ph(m) + '<div class="gx-add">' + addCtl(m) + "</div></div></div>";
   }
   function render() {
-    var q = (document.getElementById("q").value || "").toLowerCase().trim();
-    var veg = document.getElementById("vegOnly").checked;
-    var groups = [];
-    var featured = data.items.filter(function (m) { return m.featured; });
-    var cats = [{ id: "fx-featured", name: "★ Chef's specials" }].concat(catsWithItems).concat([{ id: null, name: "More" }]);
+    var anyFilter = Object.keys(filters).some(function (k) { return filters[k]; }) || document.getElementById("q").value.trim();
+    var specials = data.items.filter(function (m) { return m.featured; });
+    var sp = document.getElementById("specials");
+    if (specials.length && !anyFilter) {
+      sp.innerHTML = '<div class="gx-section-title">Chef\'s specials <small>most loved here</small></div><div class="gx-specials">' +
+        specials.map(function (m) {
+          return '<div class="gx-special" data-open="' + m.id + '">' + ph(m) + '<div class="sp-body"><b>' + esc(m.name) + '</b><div class="row">' + dot(m.type) + '<span class="strong">' + money(m.price) + '</span><span style="margin-left:auto">' + (canOrder ? (cart[m.id] ? '<span class="badge badge-violet">' + cart[m.id] + " in cart</span>" : "") : "") + "</span></div></div></div>";
+        }).join("") + "</div>";
+    } else { sp.innerHTML = ""; }
+
     var html = "", shown = 0;
     cats.forEach(function (c) {
-      if (activeCat && String(c.id) !== activeCat) return;
-      var items = c.id === "fx-featured" ? featured : data.items.filter(function (m) { return c.id === null ? !m.cat || !catsWithItems.some(function (x) { return x.id === m.cat; }) : m.cat === c.id; });
-      if (c.id === "fx-featured" && (q || activeCat)) return;
-      items = items.filter(function (m) { return (!q || m.name.toLowerCase().indexOf(q) >= 0 || (m.desc || "").toLowerCase().indexOf(q) >= 0) && (!veg || m.type === "veg"); });
+      var items = data.items.filter(function (m) { return (c.id === "other" ? others.indexOf(m) >= 0 : m.cat === c.id) && matches(m); });
       if (!items.length) return;
       shown += items.length;
-      html += '<h2 class="cat-title" id="cat-' + c.id + '">' + esc(c.name) + "</h2>";
-      items.forEach(function (m) {
-        html += '<div class="dish">' + (m.img ? '<img class="dish-img" src="' + esc(m.img) + '" alt="" loading="lazy">' : '<div class="dish-img"><i data-lucide="utensils" class="icon-lg"></i></div>') +
-          '<div style="flex:1;min-width:0;display:flex;flex-direction:column"><h4>' + dot(m.type) + esc(m.name) + "</h4>" + (m.desc ? "<p>" + esc(m.desc) + "</p>" : "") +
-          '<div class="row" style="margin-top:auto"><span class="price-tag">' + FX.money(m.price) + "</span>" + addBtn(m) + "</div></div></div>";
-      });
+      html += '<div class="gx-section-title" id="cat-' + c.id + '" data-cat-section="' + c.id + '">' + esc(c.name) + " <small>" + items.length + "</small></div>" +
+        '<div class="card" style="padding:0 16px">' + items.map(dishRow).join("") + "</div>";
     });
     document.getElementById("menu").innerHTML = html;
     document.getElementById("noResults").classList.toggle("hide", shown > 0);
-    FX.icons(); renderCart();
+    document.getElementById("cats").innerHTML = cats.map(function (c) {
+      return '<button class="gx-cat" type="button" data-cat="' + c.id + '">' + esc(c.name) + "</button>";
+    }).join("");
+    icons(); renderCart(); spy();
   }
-  function total() { return Object.keys(cart).reduce(function (s, id) { return s + byId[id].price * cart[id]; }, 0); }
+
+  // ---------- cart & bill
+  function subtotal() { return Object.keys(cart).reduce(function (s, id) { return s + byId[id].price * cart[id]; }, 0); }
   function count() { return Object.keys(cart).reduce(function (s, id) { return s + cart[id]; }, 0); }
+  function orderType() { var r = document.querySelector("input[name=order_type]:checked"); return r ? r.value : (mode === "table" ? "dine_in" : "takeaway"); }
+  function discountFor(c, sub) {
+    if (!c || sub < c.min) return 0;
+    var d = c.type === "percent" ? sub * c.value / 100 : c.value;
+    if (c.max) d = Math.min(d, c.max);
+    return Math.min(d, sub);
+  }
+  function totals() {
+    var sub = subtotal(), disc = discountFor(coupon, sub), taxable = sub - disc;
+    var service = mode === "table" ? taxable * (bill.service || 0) / 100 : 0;
+    var gst = (taxable + service) * (bill.gst || 0) / 100;
+    var del = orderType() === "delivery" ? bill.delivery_fee : 0;
+    var total = Math.round(taxable + service + gst + del);
+    return { sub: sub, disc: disc, service: service, gst: gst, del: del, total: total };
+  }
   function renderCart() {
     if (!canOrder) return;
-    var n = count();
-    document.getElementById("cartBar").classList.toggle("hide", n === 0);
-    document.getElementById("cartCount").textContent = n + " item" + (n === 1 ? "" : "s");
-    document.getElementById("cartTotal").textContent = FX.money(total()) + " + taxes if any";
+    var n = count(), t = totals();
+    document.getElementById("cartBar").classList.toggle("show", n > 0);
+    document.getElementById("cartCount").textContent = n + " item" + (n === 1 ? "" : "s") + " added";
+    document.getElementById("cartTotal").textContent = money(t.sub) + (bill.gst ? " + taxes" : "");
+    document.getElementById("sheetCount").textContent = n + " item" + (n === 1 ? "" : "s");
     document.getElementById("sheetLines").innerHTML = Object.keys(cart).map(function (id) {
       var m = byId[id];
-      return '<div class="sheet-line">' + dot(m.type) + '<span style="flex:1"><b>' + esc(m.name) + '</b><br><span class="muted small">' + FX.money(m.price) + '</span></span><div class="qty-ctrl"><button type="button" data-dec="' + id + '">−</button><span>' + cart[id] + '</span><button type="button" data-add="' + id + '">+</button></div></div>';
-    }).join("") || '<p class="muted">Your cart is empty.</p>';
-    document.getElementById("sheetTotal").textContent = FX.money(total());
-    document.getElementById("placeTotal").textContent = FX.money(total());
-    document.getElementById("cartInput").value = JSON.stringify(Object.keys(cart).map(function (id) { return { id: Number(id), qty: cart[id] }; }));
-    document.getElementById("placeBtn").disabled = n === 0;
+      return '<div class="gx-line">' + dot(m.type) + '<div style="flex:1;min-width:0"><div class="l-name">' + esc(m.name) + '</div><div class="muted small">' + money(m.price) + " each</div>" +
+        '<input class="input l-note" data-note="' + id + '" value="' + esc(notes[id] || "") + '" placeholder="Add a note (e.g. less spicy)" maxlength="120"></div>' +
+        '<div class="text-right"><div class="gx-step"><button type="button" data-dec="' + id + '">−</button><span>' + cart[id] + '</span><button type="button" data-add="' + id + '">+</button></div><div class="strong mt-1">' + money(m.price * cart[id]) + "</div></div></div>";
+    }).join("") || '<div class="gx-empty"><div class="em-ico"><i data-lucide="shopping-basket"></i></div><b>Your cart is empty</b></div>';
+    var b = '<div class="r"><span>Item total</span><span>' + money(t.sub) + "</span></div>";
+    if (t.disc) b += '<div class="r save"><span>Coupon ' + esc(coupon.code) + '</span><span>−' + money(t.disc) + "</span></div>";
+    if (t.service) b += '<div class="r"><span class="muted">Service charge</span><span>' + money(t.service) + "</span></div>";
+    if (t.gst) b += '<div class="r"><span class="muted">GST (' + bill.gst + "%)</span><span>" + money(t.gst) + "</span></div>";
+    if (t.del) b += '<div class="r"><span class="muted">Delivery fee</span><span>' + money(t.del) + "</span></div>";
+    b += '<div class="r total"><span>To pay</span><span>' + money(t.total) + "</span></div>";
+    if (mode === "store" && bill.min_order && t.sub < bill.min_order) b += '<div class="small text-amber mt-1">Add ' + money(bill.min_order - t.sub) + " more to reach the minimum order.</div>";
+    document.getElementById("billBox").innerHTML = b;
+    document.getElementById("placeTotal").textContent = money(t.total);
+    document.getElementById("placeBtn").disabled = n === 0 || (mode === "store" && bill.min_order && t.sub < bill.min_order);
+    document.getElementById("cartInput").value = JSON.stringify(Object.keys(cart).map(function (id) { return { id: Number(id), qty: cart[id], note: notes[id] || "" }; }));
+    icons();
+  }
+  function change(id, delta) {
+    cart[id] = (cart[id] || 0) + delta;
+    if (cart[id] <= 0) { delete cart[id]; delete notes[id]; }
+    save(); render();
+    if (delta > 0) toast(byId[id].name + " added");
+  }
+
+  // ---------- sheets
+  var overlay = document.getElementById("overlay"), openSheet = null;
+  function show(id) { hide(); openSheet = document.getElementById(id); if (!openSheet) return; openSheet.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow = "hidden"; icons(); }
+  function hide() { if (openSheet) openSheet.classList.remove("show"); overlay.classList.remove("show"); document.body.style.overflow = ""; openSheet = null; }
+  overlay.addEventListener("click", hide);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
+
+  var detailId = null, dq = 1;
+  function openDish(id) {
+    var m = byId[id]; if (!m) return; detailId = id; dq = 1;
+    document.getElementById("dishBody").innerHTML = ph(m) + '<div class="row mt-2">' + dot(m.type) + (m.featured ? '<span class="gx-tag"><i data-lucide="star" class="icon-sm"></i>Bestseller</span>' : "") +
+      (m.prep ? '<span class="gx-tag time"><i data-lucide="timer" class="icon-sm"></i>' + m.prep + " min</span>" : "") + "</div><h2>" + esc(m.name) + '</h2><div class="strong" style="font-size:17px;margin-top:4px">' + money(m.price) + "</div>" +
+      (m.desc ? '<p class="muted">' + esc(m.desc) + "</p>" : "") +
+      (canOrder ? '<div class="gx-block"><span class="label">Special instructions</span><input class="input" id="dishNote" placeholder="e.g. less spicy, no onion" maxlength="120" value="' + esc(notes[id] || "") + '"></div>' : "");
+    var v = document.getElementById("dqVal"); if (v) v.textContent = dq;
+    var p = document.getElementById("dishAddPrice"); if (p) p.textContent = money(m.price * dq);
+    show("dishSheet");
   }
   document.addEventListener("click", function (e) {
     var a = e.target.closest("[data-add]"), d = e.target.closest("[data-dec]");
-    if (a) { e.preventDefault(); var id = a.getAttribute("data-add"); cart[id] = (cart[id] || 0) + 1; save(); render(); }
-    if (d) { e.preventDefault(); var id2 = d.getAttribute("data-dec"); cart[id2] = (cart[id2] || 0) - 1; if (cart[id2] <= 0) delete cart[id2]; save(); render(); }
+    if (a) { e.preventDefault(); e.stopPropagation(); change(a.getAttribute("data-add"), 1); return; }
+    if (d) { e.preventDefault(); e.stopPropagation(); change(d.getAttribute("data-dec"), -1); return; }
+    var o = e.target.closest("[data-open]");
+    if (o && !e.target.closest("button")) { openDish(Number(o.getAttribute("data-open"))); return; }
+    var s = e.target.closest("[data-sheet]"); if (s) { show(s.getAttribute("data-sheet")); return; }
+    if (e.target.closest("[data-close-sheet]")) { hide(); return; }
+    var dqb = e.target.closest("[data-dq]");
+    if (dqb && detailId) { dq = Math.max(1, dq + Number(dqb.getAttribute("data-dq"))); document.getElementById("dqVal").textContent = dq; document.getElementById("dishAddPrice").textContent = money(byId[detailId].price * dq); return; }
+    var cat = e.target.closest("[data-cat]");
+    if (cat) { var t = document.getElementById("cat-" + cat.getAttribute("data-cat")); if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 180, behavior: "smooth" }); return; }
+    var f = e.target.closest("[data-filter]");
+    if (f) {
+      var k = f.getAttribute("data-filter"); filters[k] = !filters[k];
+      if (k === "veg" && filters.veg) filters.non_veg = false;
+      if (k === "non_veg" && filters.non_veg) filters.veg = false;
+      document.querySelectorAll("[data-filter]").forEach(function (b) { b.classList.toggle("on", !!filters[b.getAttribute("data-filter")]); });
+      render(); return;
+    }
+    var off = e.target.closest("[data-coupon]");
+    if (off) { applyCoupon(off.getAttribute("data-coupon")); if (count()) show("cartSheet"); else toast("Offer saved — add items to use it"); return; }
   });
-  document.getElementById("q").addEventListener("input", render);
-  document.getElementById("vegOnly").addEventListener("change", render);
+  var dishAdd = document.getElementById("dishAdd");
+  if (dishAdd) dishAdd.addEventListener("click", function () {
+    var n = document.getElementById("dishNote"); if (n && n.value.trim()) notes[detailId] = n.value.trim();
+    cart[detailId] = (cart[detailId] || 0) + dq; save(); hide(); render(); toast(byId[detailId].name + " × " + dq + " added");
+  });
 
+  // notes in cart
+  var lines = document.getElementById("sheetLines");
+  if (lines) lines.addEventListener("input", function (e) {
+    var id = e.target.getAttribute("data-note"); if (!id) return;
+    notes[id] = e.target.value; save();
+    document.getElementById("cartInput").value = JSON.stringify(Object.keys(cart).map(function (i) { return { id: Number(i), qty: cart[i], note: notes[i] || "" }; }));
+  });
+
+  // coupons
+  function applyCoupon(code) {
+    code = (code || "").trim().toUpperCase();
+    var msg = document.getElementById("couponMsg"), input = document.getElementById("couponInput");
+    if (!input) return;
+    input.value = code;
+    var c = offers.filter(function (o) { return o.code === code; })[0];
+    if (!code) { coupon = null; msg.textContent = ""; }
+    else if (!c) { coupon = null; msg.innerHTML = '<span class="muted">We\'ll check this code when you place the order.</span>'; }
+    else if (subtotal() < c.min) { coupon = c; msg.innerHTML = '<span class="text-amber">Add ' + money(c.min - subtotal()) + " more to use " + esc(code) + ".</span>"; }
+    else { coupon = c; msg.innerHTML = '<span class="text-green">✓ ' + esc(code) + " applied — you save " + money(discountFor(c, subtotal())) + "</span>"; }
+    renderCart();
+  }
+  var applyBtn = document.getElementById("applyCoupon");
+  if (applyBtn) applyBtn.addEventListener("click", function () { applyCoupon(document.getElementById("couponInput").value); });
+
+  // option cards (order type / payment)
   var form = document.getElementById("checkoutForm");
   if (form) {
-    form.addEventListener("submit", function () { try { localStorage.removeItem(key); } catch (e) {} document.getElementById("placeBtn").disabled = true; });
-    form.querySelectorAll("input[name=order_type]").forEach(function (r) {
-      r.addEventListener("change", function () {
-        form.querySelectorAll("input[name=order_type]").forEach(function (x) { x.closest(".tab").classList.toggle("active", x.checked); });
-        var del = r.value === "delivery" && r.checked;
-        var addr = document.getElementById("addr"); addr.classList.toggle("hide", !del); addr.required = del;
+    form.addEventListener("change", function (e) {
+      if (e.target.type !== "radio") return;
+      form.querySelectorAll("input[name='" + e.target.name + "']").forEach(function (r) { r.closest(".gx-opt").classList.toggle("on", r.checked); });
+      if (e.target.name === "order_type") {
+        var del = e.target.value === "delivery";
+        var addr = document.getElementById("addr"); if (addr) { addr.classList.toggle("hide", !del); addr.required = del; }
         var cod = document.getElementById("codOpt");
         if (cod) {
           cod.classList.toggle("hide", !del);
-          var codInput = cod.querySelector("input");
-          if (del && !form.querySelector("input[name=payment][value=online]")) codInput.checked = true;
-          if (!del && codInput.checked) { var counter = form.querySelector("input[name=payment][value=counter]"); if (counter) counter.checked = true; }
+          var counter = document.getElementById("counterOpt"); if (counter) counter.classList.toggle("hide", del);
+          var online = form.querySelector("input[name=payment][value=online]");
+          var pick = del ? (online ? online : cod.querySelector("input")) : (online ? online : form.querySelector("input[name=payment][value=counter]"));
+          if (pick) { pick.checked = true; pick.dispatchEvent(new Event("change", { bubbles: true })); }
         }
-        var fee = document.getElementById("feeNote"); if (fee) fee.classList.toggle("hide", !del);
-      });
+        renderCart();
+      }
+    });
+    form.addEventListener("submit", function (e) {
+      if (!count()) { e.preventDefault(); return; }
+      var btn = document.getElementById("placeBtn"); btn.disabled = true; btn.firstElementChild.textContent = "Placing order…";
+      try { localStorage.removeItem(key); } catch (err) {}
     });
   }
-  var call = document.getElementById("callForm");
-  if (call) call.addEventListener("submit", function (e) {
-    e.preventDefault();
-    fetch(call.action, { method: "POST", body: new FormData(call), headers: { "x-requested-with": "fetch" }, credentials: "same-origin" })
-      .then(function () { call.querySelector("button").innerHTML = "✓ A waiter is on the way"; call.querySelector("button").disabled = true; });
+
+  // call waiter
+  var reasons = document.getElementById("reasons");
+  if (reasons) reasons.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-reason]"); if (!b) return;
+    var fd = new FormData(); fd.append("reason", b.getAttribute("data-reason"));
+    var tok = document.querySelector("#waiterSheet input[name=csrfmiddlewaretoken]"); if (tok) fd.append("csrfmiddlewaretoken", tok.value);
+    fetch(reasons.getAttribute("data-url"), { method: "POST", body: fd, headers: { "x-requested-with": "fetch" }, credentials: "same-origin" })
+      .then(function () { hide(); toast("Done — someone is on the way"); })
+      .catch(function () { toast("Couldn't reach the staff. Please wave to a waiter."); });
   });
+
+  // ---------- category scroll-spy
+  var spyObs;
+  function spy() {
+    if (!("IntersectionObserver" in window)) return;
+    if (spyObs) spyObs.disconnect();
+    spyObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var id = en.target.getAttribute("data-cat-section");
+        document.querySelectorAll(".gx-cat").forEach(function (b) {
+          var on = b.getAttribute("data-cat") === id; b.classList.toggle("on", on);
+          if (on && b.scrollIntoView) b.parentNode.scrollTo({ left: b.offsetLeft - 16, behavior: "smooth" });
+        });
+      });
+    }, { rootMargin: "-190px 0px -65% 0px" });
+    document.querySelectorAll("[data-cat-section]").forEach(function (s) { spyObs.observe(s); });
+  }
+
+  document.getElementById("q").addEventListener("input", render);
   render();
 })();
 </script>

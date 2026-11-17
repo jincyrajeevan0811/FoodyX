@@ -39,6 +39,6 @@ def menu_payload(restaurant, online_only=False):
         items = items.filter(show_online=True)
     data = [{
         "id": m.id, "name": m.name, "price": float(m.price), "cat": m.category_id, "type": m.food_type,
-        "desc": m.description, "img": m.image_url, "featured": m.is_featured,
+        "desc": m.description, "img": m.image_url, "featured": m.is_featured, "prep": m.prep_minutes,
     } for m in items]
     return {"categories": cats, "items": data}

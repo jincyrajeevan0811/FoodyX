@@ -5,7 +5,8 @@
 
 Use this when testing table QR codes or the online store from a phone.
 """
-from django.core.management.commands.runserver import Command as RunserverCommand
+# The staticfiles version also serves /static/ files (CSS, JS) like plain runserver does.
+from django.contrib.staticfiles.management.commands.runserver import Command as RunserverCommand
 
 from core.utils import lan_ip
 

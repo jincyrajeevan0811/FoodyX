@@ -1,50 +1,76 @@
 {% extends "base.html" %}
-{% load foodyx_tags %}
+{% load static foodyx_tags %}
 {% block title %}Order #{{ order.number }} · {{ r.name }}{% endblock %}
-{% block body_class %}store{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/store.css' %}">{% endblock %}
+{% block body_class %}gx{% endblock %}
 {% block body %}
-<header class="store-hero" style="padding-bottom:56px">
-  <div class="container">
-    <a href="{% if order.table %}{% url 'storefront:table_menu' order.table.qr_token %}{% else %}{% url 'storefront:store' r.slug %}{% endif %}" style="color:#e0e7ff;font-weight:600;font-size:13px"><i data-lucide="arrow-left" class="icon-sm" style="vertical-align:-3px"></i> Back to menu</a>
-    <h1 class="mt-2">{% if closed %}Order {{ main.get_status_display|lower }}{% elif main.status == "awaiting" %}Order placed!{% else %}Thanks — we're on it!{% endif %}</h1>
-    <p>{{ r.name }} · Order #{{ order.number }}{% if order.table %} · {{ order.table.name }}{% endif %}</p>
+<header class="gx-top">
+  <div class="gx-wrap">
+    <a class="gx-icon" href="{% if order.table %}{% url 'storefront:table_menu' order.table.qr_token %}{% else %}{% url 'storefront:store' r.slug %}{% endif %}" aria-label="Back to menu"><i data-lucide="arrow-left" class="icon-sm"></i></a>
+    <div class="gx-title"><b>Order #{{ order.number }}</b><small>{{ r.name }}{% if order.table %} · {{ order.table.name }}{% endif %}</small></div>
+    <span style="margin-left:auto"></span>
+    <button class="gx-icon" type="button" data-theme-toggle aria-label="Dark mode"><i data-lucide="sun-moon" class="icon-sm"></i></button>
   </div>
 </header>
-<main class="container" style="margin-top:-36px">
-  <div class="card card-pad">
-    {% if closed %}
-      <div class="alert alert-red"><i data-lucide="x-circle" class="icon-sm"></i><div>Sorry, the restaurant couldn't take this order. {% if r.phone %}Call <a href="tel:{{ r.phone }}">{{ r.phone }}</a> for help.{% endif %}</div></div>
-    {% else %}
-      <div class="track-steps">
-        {% for s in steps %}
-        <div class="track-step{% if s.done %} done{% endif %}{% if s.current %} current{% endif %}">
-          <span class="ts-dot">{% if s.done %}<i data-lucide="check" class="icon-sm"></i>{% else %}{{ forloop.counter }}{% endif %}</span>
-          <div><b>{{ s.label }}</b>{% if s.current %}<span class="muted small">In progress…</span>{% endif %}</div>
-        </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-    {% if main.order_type == "delivery" and not closed %}
-      <hr>
-      <div class="label mb-2">Share this code with the rider at delivery</div>
-      <div class="otp">{{ main.delivery_otp }}</div>
-      {% if main.rider %}<p class="muted small mt-2 center"><i data-lucide="bike" class="icon-sm" style="vertical-align:-3px"></i> {{ main.rider.first_name|default:"Your rider" }} is delivering your order.</p>{% endif %}
-    {% endif %}
-  </div>
 
-  <div class="card mt-3">
-    <div class="card-head"><h3>Order summary</h3>{% badge main.payment_status main.get_payment_status_display %}</div>
-    <div class="card-body">
-      {% for it in items %}<div class="row small" style="padding:5px 0">{{ it.food_type|food_dot }}<span>{{ it.qty }} × {{ it.name }}</span><span class="right num">{{ it.line_total|inr }}</span></div>{% endfor %}
-      <hr>
-      {% if main.discount %}<div class="row small text-green"><span>Discount {{ main.coupon_code }}</span><span class="right num">−{{ main.discount|inr:2 }}</span></div>{% endif %}
-      {% if main.tax %}<div class="row small"><span class="muted">GST</span><span class="right num">{{ main.tax|inr:2 }}</span></div>{% endif %}
-      {% if main.delivery_fee %}<div class="row small"><span class="muted">Delivery fee</span><span class="right num">{{ main.delivery_fee|inr:2 }}</span></div>{% endif %}
-      <div class="row mt-1" style="font-size:17px"><b>Total</b><b class="right num">{{ main.total|inr:2 }}</b></div>
-      {% if can_pay_online %}<a class="btn btn-primary btn-lg btn-block mt-3" href="{% url 'storefront:pay' order.public_id %}"><i data-lucide="lock" class="icon-sm"></i>Pay {{ main.balance|inr }} online</a>{% endif %}
+<main class="gx-wrap">
+  <section class="tk-hero">
+    <div class="tk-icon{% if not closed and main.status != 'completed' %} live{% endif %}">
+      <i data-lucide="{% if closed %}circle-x{% elif main.status == 'awaiting' %}clipboard-check{% elif main.status == 'accepted' %}check-circle-2{% elif main.status == 'preparing' %}chef-hat{% elif main.status == 'ready' %}bell-ring{% elif main.status == 'out_for_delivery' %}bike{% else %}party-popper{% endif %}"></i>
+    </div>
+    <h1>{% if closed %}We couldn't take this order{% elif main.status == "awaiting" %}Order sent to the restaurant{% elif main.status == "accepted" %}Order confirmed!{% elif main.status == "preparing" %}Your food is being prepared{% elif main.status == "ready" %}{% if main.order_type == "takeaway" %}Ready for pickup{% else %}Your food is ready{% endif %}{% elif main.status == "out_for_delivery" %}On the way to you{% else %}Enjoy your meal!{% endif %}</h1>
+    <p>{% if closed %}{% if r.phone %}Please call {{ r.phone }} for help.{% else %}Please ask our staff for help.{% endif %}{% elif main.status == "awaiting" %}Waiting for the restaurant to accept — usually under a minute.{% elif main.status == "out_for_delivery" %}Share the code below with the rider.{% elif main.status == "completed" or main.status == "served" %}Thank you for ordering with {{ r.name }}.{% else %}We'll keep this page updated automatically.{% endif %}</p>
+    <div class="tk-meta">
+      <span>{{ main.get_order_type_display }}</span>
+      <span>{{ main.created_at|date:"h:i A" }}</span>
+      <span>{{ main.get_payment_status_display }}</span>
+    </div>
+  </section>
+
+  {% if not closed %}
+  <div class="tk-card">
+    <h3>Order status</h3>
+    <div class="track-steps">
+      {% for s in steps %}
+      <div class="track-step{% if s.done %} done{% endif %}{% if s.current %} current{% endif %}">
+        <span class="ts-dot">{% if s.done %}<i data-lucide="check" class="icon-sm"></i>{% else %}{{ forloop.counter }}{% endif %}</span>
+        <div><b>{{ s.label }}</b>{% if s.current %}<span class="muted small">In progress…</span>{% endif %}</div>
+      </div>
+      {% endfor %}
     </div>
   </div>
-  <p class="center muted small mt-3">This page updates automatically. Powered by {{ site_name }}.</p>
+  {% endif %}
+
+  {% if main.order_type == "delivery" and not closed %}
+  <div class="tk-card">
+    <h3>Delivery code</h3>
+    <div class="otp">{{ main.delivery_otp }}</div>
+    <p class="muted small mt-2 center mb-0">{% if main.rider %}<i data-lucide="bike" class="icon-sm" style="vertical-align:-3px"></i> {{ main.rider.first_name|default:"Your rider" }} is delivering your order. {% endif %}Give this code to the rider only when you receive your food.</p>
+    {% if main.delivery_address %}<p class="small mt-2 mb-0"><i data-lucide="map-pin" class="icon-sm" style="vertical-align:-3px"></i> {{ main.delivery_address }}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="tk-card">
+    <div class="row mb-2"><h3 class="mb-0">Order summary</h3><span class="right">{% badge main.payment_status main.get_payment_status_display %}</span></div>
+    {% for it in items %}
+    <div class="row small" style="padding:7px 0;border-bottom:1px dashed var(--line)">{{ it.food_type|food_dot }}<span><b>{{ it.qty }} ×</b> {{ it.name }}{% if it.note %}<br><span class="muted tiny">“{{ it.note }}”</span>{% endif %}</span><span class="right num">{{ it.line_total|inr }}</span></div>
+    {% endfor %}
+    <div class="gx-bill" style="margin-top:12px">
+      <div class="r"><span>Item total</span><span>{{ main.subtotal|inr:2 }}</span></div>
+      {% if main.discount %}<div class="r save"><span>Discount {{ main.coupon_code }}</span><span>−{{ main.discount|inr:2 }}</span></div>{% endif %}
+      {% if main.service_charge %}<div class="r"><span class="muted">Service charge</span><span>{{ main.service_charge|inr:2 }}</span></div>{% endif %}
+      {% if main.tax %}<div class="r"><span class="muted">GST</span><span>{{ main.tax|inr:2 }}</span></div>{% endif %}
+      {% if main.delivery_fee %}<div class="r"><span class="muted">Delivery fee</span><span>{{ main.delivery_fee|inr:2 }}</span></div>{% endif %}
+      <div class="r total"><span>{% if main.payment_status == "paid" %}Paid{% else %}To pay{% endif %}</span><span>{{ main.total|inr:2 }}</span></div>
+    </div>
+    {% if can_pay_online %}<a class="gx-place mt-2" href="{% url 'storefront:pay' order.public_id %}" style="text-decoration:none"><span><i data-lucide="lock" class="icon-sm" style="vertical-align:-3px"></i> Pay online</span><span>{{ main.balance|inr }}</span></a>{% endif %}
+  </div>
+
+  <div class="tk-actions">
+    <a class="primary" href="{% if order.table %}{% url 'storefront:table_menu' order.table.qr_token %}{% else %}{% url 'storefront:store' r.slug %}{% endif %}"><i data-lucide="plus" class="icon-sm"></i>Order more</a>
+    {% if r.phone %}<a href="tel:{{ r.phone }}"><i data-lucide="phone" class="icon-sm"></i>Call restaurant</a>{% else %}<button type="button" onclick="location.reload()"><i data-lucide="refresh-cw" class="icon-sm"></i>Refresh</button>{% endif %}
+  </div>
+  <p class="center muted tiny mt-3">This page refreshes by itself. Powered by {{ site_name }}.</p>
 </main>
 {% endblock %}
 {% block scripts %}{% if not closed and main.status != "completed" %}<script>setTimeout(function () { if (!document.hidden) location.reload(); }, 15000);</script>{% endif %}{% endblock %}

@@ -18,6 +18,26 @@ def _restaurant_open(r):
     return r.is_active and r.access_granted and sub is not None and sub.is_live
 
 
+def _offers(r):
+    from django.db.models import Q
+    from django.utils import timezone
+
+    today = timezone.localdate()
+    return list(
+        Coupon.objects.filter(restaurant=r, is_active=True)
+        .filter(Q(valid_until__isnull=True) | Q(valid_until__gte=today))[:6]
+    )
+
+
+def _bill_info(r, mode):
+    return {
+        "gst": float(r.gst_percent) if r.charge_gst else 0,
+        "service": float(r.service_charge_percent) if mode == "table" else 0,
+        "delivery_fee": float(r.delivery_fee),
+        "min_order": float(r.min_order_amount),
+    }
+
+
 def _remember(request, order):
     ids = request.session.get("my_orders", [])
     ids = [str(order.public_id)] + [i for i in ids if i != str(order.public_id)]
@@ -36,6 +56,7 @@ def table_menu(request, token):
         "r": r, "table": table, "menu": menu_payload(r, online_only=False), "can_order": can_order,
         "mode": "table", "my_orders": my_orders[:3],
         "post_url": request.path + "order/",
+        "offers": [], "bill": _bill_info(r, "table"),
     })
 
 
@@ -101,6 +122,7 @@ def store(request, slug):
         "pay_online": r.online_payments_ready and r.has_feature("online_payments"),
         "post_url": request.path + "checkout/",
         "my_orders": Order.objects.filter(public_id__in=request.session.get("my_orders", []), restaurant=r)[:3],
+        "offers": _offers(r) if r.has_feature("marketing") else [], "bill": _bill_info(r, "store"),
     })
 
 
