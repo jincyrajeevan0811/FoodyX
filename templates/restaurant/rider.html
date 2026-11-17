@@ -1,0 +1,52 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Rider{% endblock %}
+{% block heading %}My deliveries{% endblock %}
+{% block subheading %}{% if request.user.is_online %}You are online{% else %}You are offline{% endif %}{% endblock %}
+{% block content %}
+<div class="card hero-card card-pad mb-3">
+  <div class="row wrap">
+    <div><div class="muted small">Status</div><div style="font-size:22px;font-weight:800">{% if request.user.is_online %}Online — ready for orders{% else %}Offline{% endif %}</div></div>
+    <form method="post" action="{% url 'restaurant:rider_toggle' %}" class="right">{% csrf_token %}
+      <button class="btn {% if request.user.is_online %}btn-outline{% else %}btn-lime{% endif %} btn-lg">{% if request.user.is_online %}Go offline{% else %}Go online{% endif %}</button>
+    </form>
+  </div>
+  <div class="row wrap mt-3" style="gap:24px;position:relative;z-index:1">
+    <div><div class="muted small">Delivered today</div><b style="font-size:20px">{{ done|length }}</b></div>
+    <div><div class="muted small">Cash in hand (COD)</div><b style="font-size:20px">{{ cash_in_hand|inr }}</b></div>
+  </div>
+</div>
+
+{% for o in orders %}
+<div class="card mb-3">
+  <div class="card-head"><b style="font-size:16px">#{{ o.number }}</b>{% badge o.delivery_status o.get_delivery_status_display %}<b class="right num">{{ o.total|inr }}</b></div>
+  <div class="card-body">
+    <div class="strong">{{ o.customer_name|default:"Customer" }}</div>
+    <div class="muted small mt-1">{{ o.delivery_address }}</div>
+    <div class="row wrap mt-2">
+      <a class="btn btn-outline btn-sm" href="tel:{{ o.customer_phone }}"><i data-lucide="phone" class="icon-sm"></i>Call</a>
+      <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{ o.delivery_address|urlencode }}"><i data-lucide="map" class="icon-sm"></i>Directions</a>
+      {% if o.payment_status == "paid" %}<span class="badge badge-green">Prepaid</span>{% else %}<span class="badge badge-amber">Collect {{ o.balance|inr }} cash</span>{% endif %}
+    </div>
+  </div>
+  <div class="card-foot">
+    {% if o.delivery_status == "assigned" %}
+      <form method="post" action="{% url 'restaurant:rider_action' o.pk %}" class="row">{% csrf_token %}
+        <button class="btn btn-soft" name="action" value="accept">Accept</button>
+        <button class="btn btn-primary" name="action" value="picked"><i data-lucide="package-check" class="icon-sm"></i>Picked up</button>
+      </form>
+    {% elif o.delivery_status == "accepted" %}
+      <form method="post" action="{% url 'restaurant:rider_action' o.pk %}">{% csrf_token %}<button class="btn btn-primary btn-block" name="action" value="picked"><i data-lucide="package-check" class="icon-sm"></i>Picked up — leaving now</button></form>
+    {% elif o.delivery_status == "picked" %}
+      <form method="post" action="{% url 'restaurant:rider_action' o.pk %}" class="row">{% csrf_token %}
+        <input type="text" name="otp" inputmode="numeric" maxlength="4" placeholder="4-digit code from customer" required style="max-width:240px">
+        <button class="btn btn-primary" name="action" value="delivered"><i data-lucide="check-circle" class="icon-sm"></i>Delivered</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<div class="card"><div class="empty"><div class="em-ico"><i data-lucide="bike"></i></div><b>No deliveries assigned</b>{% if request.user.is_online %}New deliveries will appear here.{% else %}Go online to receive deliveries.{% endif %}</div></div>
+{% endfor %}
+{% endblock %}
+{% block scripts %}<script>setTimeout(function () { if (!document.hidden && !document.activeElement.closest("form")) location.reload(); }, 30000);</script>{% endblock %}

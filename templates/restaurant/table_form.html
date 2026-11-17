@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Table{% endblock %}
+{% block heading %}{% if table %}Edit {{ table.name }}{% else %}Add table{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:640px">
+  {% csrf_token %}
+  <div class="card-body">{% include "partials/form_fields.html" %}</div>
+  <div class="form-actions">
+    {% if table %}<button class="btn btn-ghost text-red" name="delete" value="1" style="margin-right:auto" formnovalidate onclick="return confirm('Delete this table? Its QR code stops working.')">Delete</button>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'restaurant:tables' %}">Cancel</a>
+    <button class="btn btn-primary">Save</button>
+  </div>
+</form>
+{% endblock %}

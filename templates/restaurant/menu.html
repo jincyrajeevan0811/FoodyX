@@ -1,0 +1,97 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Menu{% endblock %}
+{% block heading %}Menu{% endblock %}
+{% block subheading %}{{ total }} items · {{ unavailable }} unavailable today{% endblock %}
+{% block top_actions %}
+  <button class="btn btn-outline btn-sm" data-open="importModal"><i data-lucide="upload" class="icon-sm"></i>Import CSV</button>
+  <a class="btn btn-soft btn-sm" href="{% url 'restaurant:category_add' %}"><i data-lucide="folder-plus" class="icon-sm"></i>Category</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'restaurant:item_add' %}"><i data-lucide="plus" class="icon-sm"></i>Add item</a>
+{% endblock %}
+{% block content %}
+<div class="row wrap between mb-3">
+  <div class="tabs">
+    <a class="tab{% if tab != 'categories' %} active{% endif %}" href="?tab=items">Items</a>
+    <a class="tab{% if tab == 'categories' %} active{% endif %}" href="?tab=categories">Categories <span class="n">{{ categories|length }}</span></a>
+  </div>
+  {% if tab != "categories" %}
+  <form class="search-bar" method="get">
+    <select name="cat" style="width:auto" data-autosubmit><option value="">All categories</option>{% for c in categories %}<option value="{{ c.pk }}"{% if cat == c.pk|stringformat:"s" %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+    <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Search items"></div>
+  </form>
+  {% endif %}
+</div>
+
+{% if tab == "categories" %}
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Category</th><th>Items</th><th>Order</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for c in categories %}
+      <tr><td class="t-title">{{ c.name }}</td><td>{{ c.n }}</td><td>{{ c.sort_order }}</td>
+        <td>{% if c.is_active %}<span class="badge badge-green">Shown</span>{% else %}<span class="badge badge-slate">Hidden</span>{% endif %}</td>
+        <td class="text-right"><a class="btn btn-outline btn-xs" href="{% url 'restaurant:category_edit' c.pk %}">Edit</a></td></tr>
+    {% empty %}<tr><td colspan="5"><div class="empty"><b>No categories</b><a href="{% url 'restaurant:category_add' %}">Add your first category</a></div></td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% else %}
+<form method="post" action="{% url 'restaurant:items_bulk' %}" class="card" id="bulkForm">
+  {% csrf_token %}
+  <div class="card-head" style="padding:12px 16px">
+    <label class="check"><input type="checkbox" data-check-all=".row-check"> <span class="small">Select all shown</span></label>
+    <div class="right row">
+      <button class="btn btn-ghost btn-xs" name="action" value="available">Mark available</button>
+      <button class="btn btn-ghost btn-xs" name="action" value="unavailable">Mark unavailable</button>
+      <button class="btn btn-ghost btn-xs text-red" name="action" value="delete" onclick="return confirm('Delete the selected items? This cannot be undone.')">Delete selected</button>
+    </div>
+  </div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th style="width:36px"></th><th>Item</th><th>Category</th><th>Station</th><th class="text-right">Price</th><th>Available</th><th></th></tr></thead>
+    <tbody>
+    {% for m in items %}
+      <tr>
+        <td><input type="checkbox" class="row-check" name="ids" value="{{ m.pk }}"></td>
+        <td><div class="row">{{ m.food_type|food_dot }}<div><span class="t-title">{{ m.name }}</span>{% if m.is_featured %} <span class="badge badge-violet">Featured</span>{% endif %}<div class="t-sub">{{ m.description|truncatechars:60 }}</div></div></div></td>
+        <td>{{ m.category|default:"—" }}</td>
+        <td class="muted">{{ m.station|default:"—" }}</td>
+        <td class="text-right strong num">{{ m.price|inr:2 }}</td>
+        <td><label class="switch"><input type="checkbox" {% if m.is_available %}checked{% endif %} data-toggle-url="{% url 'restaurant:item_toggle' m.pk %}"><span></span></label></td>
+        <td class="text-right nowrap">
+          <a class="btn btn-ghost btn-xs" href="{% url 'restaurant:item_edit' m.pk %}" aria-label="Edit"><i data-lucide="pencil" class="icon-sm"></i></a>
+          <button class="btn btn-ghost btn-xs text-red" form="del-{{ m.pk }}" aria-label="Delete"><i data-lucide="trash-2" class="icon-sm"></i></button>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7"><div class="empty"><div class="em-ico"><i data-lucide="utensils-crossed"></i></div><b>No items {% if q %}match “{{ q }}”{% else %}yet{% endif %}</b><a href="{% url 'restaurant:item_add' %}">Add an item</a> or import a list.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</form>
+{% for m in items %}<form id="del-{{ m.pk }}" method="post" action="{% url 'restaurant:item_delete' m.pk %}" data-confirm="Delete {{ m.name }}? Old bills keep the name.">{% csrf_token %}</form>{% endfor %}
+{% endif %}
+
+<dialog class="modal wide" id="importModal">
+  <form method="post" action="{% url 'restaurant:items_import' %}">
+    {% csrf_token %}
+    <div class="modal-head"><h3>Import items</h3><button class="icon-btn x" data-close type="button"><i data-lucide="x"></i></button></div>
+    <div class="modal-body">
+      <p class="muted small">Paste one item per line: <code>name, category, price, veg/non_veg</code>. New categories are created automatically.</p>
+      <textarea name="csv" rows="10" placeholder="Paneer Tikka, Starters, 240, veg&#10;Chicken Biriyani, Biriyani, 260, non_veg&#10;Masala Chai, Hot Drinks, 30, veg"></textarea>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button class="btn btn-primary">Import</button></div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll("[data-toggle-url]").forEach(function (sw) {
+  sw.addEventListener("change", function () {
+    var fd = new FormData(); fd.append("csrfmiddlewaretoken", FX.csrf());
+    fetch(sw.getAttribute("data-toggle-url"), { method: "POST", body: fd, headers: { "x-requested-with": "fetch" }, credentials: "same-origin" })
+      .then(function (r) { return r.json(); }).then(function (d) { sw.checked = d.available; })
+      .catch(function () { sw.checked = !sw.checked; });
+  });
+});
+</script>
+{% endblock %}

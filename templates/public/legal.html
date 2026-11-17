@@ -1,0 +1,30 @@
+{% extends "public/base_site.html" %}
+{% block title %}{{ title }} · {{ site_name }}{% endblock %}
+{% block site_content %}
+<section class="section">
+  <div class="container" style="max-width:780px">
+    <span class="s-kicker">Legal</span>
+    <h1 style="font-size:40px;font-weight:800;letter-spacing:-.03em">{{ title }}</h1>
+    <p class="muted">Last updated {% now "d F Y" %}</p>
+    {% if page == "terms" %}
+      <h3 class="mt-4">Using {{ site_name }}</h3>
+      <p>{{ site_name }} provides restaurant management software on a subscription. By creating an account you agree to use it lawfully, keep your login details private and give every staff member their own login.</p>
+      <h3 class="mt-3">Plans & payments</h3>
+      <p>Subscriptions are billed in advance per outlet, plus GST. Trials end automatically; your data is kept if you choose a plan later. Payments are processed securely by Razorpay.</p>
+      <h3 class="mt-3">Your data</h3>
+      <p>You own your menu, orders, customers and reports. You can export them at any time from Reports, Bills and Customers.</p>
+      <h3 class="mt-3">Availability</h3>
+      <p>We work hard to keep the service available and will tell you in advance about planned maintenance.</p>
+    {% else %}
+      <h3 class="mt-4">What we collect</h3>
+      <p>Account details (name, mobile number, email), restaurant details and the operational data you enter, such as menus, orders and customer contact numbers.</p>
+      <h3 class="mt-3">How we use it</h3>
+      <p>Only to run the service for you: billing, reports, notifications and support. We never sell your data or your customers' data.</p>
+      <h3 class="mt-3">Security</h3>
+      <p>Data is separated per restaurant, protected by role-based permissions, and important actions are recorded in an activity log.</p>
+      <h3 class="mt-3">Contact</h3>
+      <p>Questions? Write to {{ platform.support_email|default:"our support team" }}.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

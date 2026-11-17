@@ -1,0 +1,13 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Device{% endblock %}
+{% block heading %}{% if device %}Edit {{ device.name }}{% else %}Add device{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:760px">
+  {% csrf_token %}
+  <div class="card-body">{% include "partials/form_fields.html" %}</div>
+  <div class="form-actions">
+    {% if device %}<button class="btn btn-ghost text-red" name="delete" value="1" style="margin-right:auto" formnovalidate onclick="return confirm('Remove this device?')">Remove</button>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'restaurant:hardware' %}">Cancel</a><button class="btn btn-primary">Save</button>
+  </div>
+</form>
+{% endblock %}

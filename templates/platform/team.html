@@ -1,0 +1,33 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Team & roles{% endblock %}
+{% block heading %}Team & roles{% endblock %}
+{% block subheading %}People who run {{ site_name }}{% endblock %}
+{% block top_actions %}{% if can_team %}<a class="btn btn-primary btn-sm" href="{% url 'saas:team_add' %}"><i data-lucide="user-plus" class="icon-sm"></i>Add team member</a>{% endif %}{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <div class="card">
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Member</th><th>Role</th><th>Email</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for m in members %}
+        <tr>
+          <td><div class="row"><span class="avatar">{{ m.initials }}</span><span class="t-title">{{ m.display_name }}<div class="t-sub">@{{ m.username }}</div></span></div></td>
+          <td>{% if m.is_superuser and m.role != "super_admin" %}Superuser{% else %}{{ m.role_label }}{% endif %}</td>
+          <td class="muted">{{ m.email|default:"—" }}</td>
+          <td>{% if m.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Disabled</span>{% endif %}</td>
+          <td class="text-right">{% if can_team %}<a class="btn btn-outline btn-xs" href="{% url 'saas:team_edit' m.pk %}">Edit</a>{% endif %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="5" class="muted center">No team members.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="font-size:15.5px">Platform roles</h3>
+    {% for name, desc in role_info %}
+      <div class="timeline-item"><span class="tl-dot"></span><div><b>{{ name }}</b><p class="muted small mb-0">{{ desc }}</p></div></div>
+    {% endfor %}
+    <hr>
+    <p class="muted small mb-0">Restaurant roles (Owner, Admin, Manager, Captain, Cashier, Kitchen, Rider, Store keeper) are configured per restaurant from <b>Restaurants → Role permissions</b>.</p>
+  </div>
+</div>
+{% endblock %}

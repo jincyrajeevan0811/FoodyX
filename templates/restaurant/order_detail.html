@@ -1,0 +1,60 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Order #{{ order.number }}{% endblock %}
+{% block heading %}Order #{{ order.number }}{% endblock %}
+{% block subheading %}{{ order.get_order_type_display }} · {{ order.place_label }} · {{ order.created_at|date:"d M Y, h:i A" }}{% endblock %}
+{% block top_actions %}
+  {% if order.bill_no %}<a class="btn btn-outline btn-sm" href="{% url 'restaurant:bill_print' order.pk %}"><i data-lucide="printer" class="icon-sm"></i>Bill</a>{% endif %}
+  {% if order.is_open and allowed_modules|has_module:"pos" %}<a class="btn btn-soft btn-sm" href="{% url 'restaurant:pos_order' order.pk %}">Open in POS</a>{% endif %}
+{% endblock %}
+{% block content %}
+{% if order.status == "awaiting" %}
+<div class="alert alert-amber mb-3" style="align-items:center"><i data-lucide="bell-ring" class="icon-sm"></i><div>This {{ order.get_source_display }} order is waiting for acceptance.</div>
+  <form method="post" action="{% url 'restaurant:order_accept' order.pk %}" class="row right">{% csrf_token %}
+    <button class="btn btn-ghost btn-sm" name="decision" value="reject">Reject</button><button class="btn btn-primary btn-sm" name="decision" value="accept">Accept</button>
+  </form>
+</div>
+{% endif %}
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-head"><h3>Items</h3></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Item</th><th>KOT</th><th>Status</th><th>Added by</th><th class="text-right">Qty</th><th class="text-right">Amount</th></tr></thead>
+      <tbody>
+      {% for it in items %}
+        <tr{% if it.kot_status == "cancelled" %} style="opacity:.5"{% endif %}>
+          <td><span class="row">{{ it.food_type|food_dot }}<span class="t-title">{{ it.name }}</span></span>{% if it.note %}<div class="t-sub">“{{ it.note }}”</div>{% endif %}</td>
+          <td>{{ it.kot_no|default:"—" }}</td><td>{% badge it.kot_status it.get_kot_status_display %}</td>
+          <td class="muted small">{{ it.added_by|default:order.get_source_display }}</td>
+          <td class="text-right">{{ it.qty }}</td><td class="text-right num">{{ it.line_total|inr:2 }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot><tr><td colspan="5" class="text-right">Total</td><td class="text-right num">{{ order.total|inr:2 }}</td></tr></tfoot>
+    </table></div>
+  </div>
+  <div class="stack">
+    <div class="card card-pad">
+      <dl class="kv">
+        <dt>Status</dt><dd>{% badge order.status order.get_status_display %}</dd>
+        <dt>Payment</dt><dd>{% badge order.payment_status order.get_payment_status_display %}</dd>
+        <dt>Bill no.</dt><dd>{{ order.bill_no|default:"—" }}</dd>
+        <dt>Guest</dt><dd>{{ order.customer_name|default:"—" }} {{ order.customer_phone }}</dd>
+        {% if order.order_type == "delivery" %}<dt>Address</dt><dd>{{ order.delivery_address }}</dd><dt>Rider</dt><dd>{{ order.rider|default:"Not assigned" }} · {{ order.get_delivery_status_display }}</dd><dt>Delivery OTP</dt><dd>{{ order.delivery_otp }}</dd>{% endif %}
+        <dt>Subtotal</dt><dd class="num">{{ order.subtotal|inr:2 }}</dd>
+        <dt>Discount</dt><dd class="num">{{ order.discount|inr:2 }}</dd>
+        {% if order.service_charge %}<dt>Service charge</dt><dd class="num">{{ order.service_charge|inr:2 }}</dd>{% endif %}
+        {% if order.tax %}<dt>GST</dt><dd class="num">{{ order.tax|inr:2 }}</dd>{% endif %}
+        {% if order.delivery_fee %}<dt>Delivery fee</dt><dd class="num">{{ order.delivery_fee|inr:2 }}</dd>{% endif %}
+        {% if order.note %}<dt>Note</dt><dd>{{ order.note }}</dd>{% endif %}
+      </dl>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Payments</h3></div>
+      {% for p in payments %}
+        <div class="list-row"><span class="pill">{{ p.get_method_display }}</span><span class="muted small">{{ p.created_at|date:"h:i A" }}{% if p.created_by %} · {{ p.created_by.display_name }}{% endif %}{% if p.reference %} · {{ p.reference }}{% endif %}</span><b class="right num">{{ p.amount|inr:2 }}</b></div>
+      {% empty %}<div class="empty" style="padding:24px">No payments yet.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

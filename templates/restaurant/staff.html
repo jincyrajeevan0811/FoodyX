@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Staff & roles{% endblock %}
+{% block heading %}Staff & roles{% endblock %}
+{% block subheading %}{{ active_count }} active login{{ active_count|pluralize }}{% if limit %} · plan allows {{ limit }}{% endif %}{% endblock %}
+{% block top_actions %}
+  {% if request.user.role == "owner" or request.user.role == "admin" %}<a class="btn btn-outline btn-sm" href="{% url 'restaurant:staff_permissions' %}"><i data-lucide="shield-check" class="icon-sm"></i>Role permissions</a>{% endif %}
+  <a class="btn btn-primary btn-sm" href="{% url 'restaurant:staff_add' %}"><i data-lucide="user-plus" class="icon-sm"></i>Add staff</a>
+{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <div class="card">
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Name</th><th>Role</th><th>Sign-in</th><th>PIN</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for m in members %}
+        <tr{% if not m.is_active %} style="opacity:.6"{% endif %}>
+          <td><div class="row"><span class="avatar">{{ m.initials }}</span><div><span class="t-title">{{ m.display_name }}</span>{% if m == request.user %} <span class="badge badge-teal">You</span>{% endif %}<div class="t-sub">Last seen {{ m.last_login|timesince|default:"never" }}{% if m.last_login %} ago{% endif %}</div></div></div></td>
+          <td>{{ m.role_label }}{% if m.role == "rider" %}<div class="t-sub">{% if m.is_online %}● online{% else %}○ offline{% endif %}</div>{% endif %}</td>
+          <td>{{ m.phone|default:"—" }}<div class="t-sub">{{ m.email }}</div></td>
+          <td>{% if m.pin %}••••{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% if m.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Off</span>{% endif %}</td>
+          <td class="text-right nowrap">
+            {% if m.role != "owner" or request.user.role == "owner" %}<a class="btn btn-ghost btn-xs" href="{% url 'restaurant:staff_edit' m.pk %}">Edit</a>{% endif %}
+            {% if m != request.user and m.role != "owner" %}
+            <form method="post" action="{% url 'restaurant:staff_toggle' m.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-xs">{% if m.is_active %}Switch off{% else %}Switch on{% endif %}</button></form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card card-pad">
+    <h3 style="font-size:15.5px">Who does what</h3>
+    {% for code, desc in role_desc.items %}
+      <div class="timeline-item"><span class="tl-dot"></span><div><b class="small" style="text-transform:capitalize">{{ code|cut:"_"|capfirst }}</b><p class="muted small mb-0">{{ desc }}</p></div></div>
+    {% endfor %}
+    <div class="alert alert-blue mt-2 small"><i data-lucide="info" class="icon-sm"></i><div>Every person needs their own login. A captain's login works on one device at a time.</div></div>
+  </div>
+</div>
+{% endblock %}

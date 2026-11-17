@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load foodyx_tags %}
+{% block title %}{% block page_title %}Dashboard{% endblock %} · {{ current_restaurant.name }} · {{ site_name }}{% endblock %}
+{% block body %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'core:home_redirect' %}">{% include "partials/brand.html" %}</a>
+    <div class="side-scroll">
+      <div style="padding:4px 12px 2px;color:#fff;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center">
+        <i data-lucide="store" class="icon-sm" style="color:var(--lime)"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ current_restaurant.name }}</span>
+      </div>
+      {% for group in nav_groups %}
+      <div class="side-group">
+        <div class="side-label">{{ group.name }}</div>
+        {% for item in group.items %}
+        <a class="side-link" href="{{ item.url }}">
+          <i data-lucide="{{ item.icon }}"></i>{{ item.label }}
+          {% if item.code == "orders" and awaiting_count %}<span class="count">{{ awaiting_count }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      {% if allowed_modules|has_module:"pos" %}
+      <div class="side-group">
+        <div class="side-label">Shortcuts</div>
+        <a class="side-link" href="{% url 'storefront:store' current_restaurant.slug %}" target="_blank" rel="noopener"><i data-lucide="globe"></i>Online store</a>
+      </div>
+      {% endif %}
+    </div>
+    {% if subscription %}
+    <div class="plan-card">
+      <strong>{{ subscription.plan.name }} plan</strong>
+      <small>{% if subscription.is_trial %}Trial · {{ subscription.days_left }} day{{ subscription.days_left|pluralize }} left{% elif subscription.is_live %}Renews {{ subscription.current_period_end|date:"d M Y" }}{% else %}Expired{% endif %}</small>
+      {% if allowed_modules|has_module:"billing" %}
+      <a class="btn btn-lime btn-sm" href="{% url 'restaurant:billing' %}">{% if subscription.is_trial or not subscription.is_live %}Upgrade{% else %}Manage plan{% endif %}</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" data-menu-toggle aria-label="Menu"><i data-lucide="menu"></i></button>
+      <div>
+        <h1>{% block heading %}Dashboard{% endblock %}</h1>
+        <div class="sub">{% block subheading %}{{ current_restaurant.name }}{% endblock %}</div>
+      </div>
+      <div class="top-actions">
+        {% block top_actions %}{% endblock %}
+        {% if allowed_modules|has_module:"pos" %}
+        <a class="btn btn-primary btn-sm" href="{% url 'restaurant:pos' %}"><i data-lucide="plus" class="icon-sm"></i><span>New order</span></a>
+        {% endif %}
+        <div class="dropdown" data-dropdown>
+          <button class="icon-btn" data-dropdown-trigger aria-label="Notifications">
+            <i data-lucide="bell"></i>{% if waiter_calls or awaiting_count %}<span class="dot"></span>{% endif %}
+          </button>
+          <div class="dropdown-menu">
+            <div class="dd-head">Notifications</div>
+            {% if awaiting_count %}
+              <a class="dd-item" href="{% url 'restaurant:orders' %}?tab=awaiting"><i data-lucide="qr-code" class="icon-sm"></i>{{ awaiting_count }} order{{ awaiting_count|pluralize }} awaiting acceptance</a>
+            {% endif %}
+            {% for call in waiter_calls %}
+              <form method="post" action="{% url 'restaurant:resolve_call' call.pk %}" class="dd-item">
+                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <i data-lucide="hand" class="icon-sm" style="color:var(--amber)"></i>
+                <span><b>{{ call.table.name }}</b> · {{ call.reason }}<br><small class="muted">{{ call.created_at|timesince }} ago</small></span>
+                <button class="btn btn-xs btn-soft right">Done</button>
+              </form>
+            {% endfor %}
+            {% if not waiter_calls and not awaiting_count %}<div class="dd-item muted">You're all caught up.</div>{% endif %}
+          </div>
+        </div>
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle dark mode"><i data-lucide="moon"></i></button>
+        <div class="dropdown" data-dropdown>
+          <button class="user-chip icon-btn" style="width:auto;height:auto;border:0;background:none" data-dropdown-trigger>
+            <span class="avatar">{{ request.user.initials }}</span>
+            <span class="who" style="text-align:left"><b>{{ request.user.display_name }}</b><small>{{ request.user.role_label }}</small></span>
+          </button>
+          <div class="dropdown-menu" style="min-width:220px">
+            <div class="dd-head">{{ current_restaurant.name }}</div>
+            {% if allowed_modules|has_module:"settings" %}<a class="dd-item" href="{% url 'restaurant:settings' %}"><i data-lucide="settings" class="icon-sm"></i>Settings</a>{% endif %}
+            {% if allowed_modules|has_module:"billing" %}<a class="dd-item" href="{% url 'restaurant:billing' %}"><i data-lucide="credit-card" class="icon-sm"></i>Plan & billing</a>{% endif %}
+            {% if request.user.is_platform %}<a class="dd-item" href="{% url 'saas:overview' %}"><i data-lucide="shield" class="icon-sm"></i>Platform admin</a>{% endif %}
+            <form method="post" action="{% url 'core:logout' %}">{% csrf_token %}
+              <button class="dd-item w-100" style="border:0;background:none;cursor:pointer;font:inherit"><i data-lucide="log-out" class="icon-sm"></i>Sign out</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+    {% if subscription and subscription.is_trial and subscription.days_left <= 3 and allowed_modules|has_module:"billing" %}
+    <div class="alert alert-amber" style="border-radius:0;justify-content:center">
+      <i data-lucide="clock" class="icon-sm"></i> Your free trial ends in {{ subscription.days_left }} day{{ subscription.days_left|pluralize }}.
+      <a href="{% url 'restaurant:billing' %}" class="strong">Choose a plan →</a>
+    </div>
+    {% endif %}
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

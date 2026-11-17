@@ -1,0 +1,53 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Inventory{% endblock %}
+{% block heading %}Inventory{% endblock %}
+{% block subheading %}Stock, purchases and wastage{% endblock %}
+{% block top_actions %}<a class="btn btn-primary btn-sm" href="{% url 'restaurant:inventory_add' %}"><i data-lucide="plus" class="icon-sm"></i>Add stock item</a>{% endblock %}
+{% block content %}
+<div class="grid g-3 mb-3">
+  <div class="card stat"><div class="label">Stock items</div><div class="value">{{ items|length }}</div><div class="hint">tracked ingredients</div></div>
+  <div class="card stat lime"><div class="label">Stock value</div><div class="value">{{ stock_value|inr }}</div><div class="hint">at cost</div></div>
+  <div class="card stat {% if low_count %}violet{% else %}blue{% endif %}"><div class="label">Low stock</div><div class="value">{{ low_count }}</div><div class="hint"><a href="?low=1">Show only low stock</a></div></div>
+</div>
+<div class="grid g-side">
+  <div class="card">
+    <div class="card-head">
+      <form class="search-bar w-100" method="get">
+        <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Search stock"></div>
+        {% if low_only %}<a class="btn btn-ghost btn-sm" href="?">Show all</a>{% endif %}
+      </form>
+    </div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Item</th><th class="text-right">In stock</th><th class="text-right">Re-order at</th><th class="text-right">Value</th><th>Update stock</th><th></th></tr></thead>
+      <tbody>
+      {% for i in items %}
+        <tr>
+          <td><span class="t-title">{{ i.name }}</span>{% if i.is_low %} <span class="badge badge-red">Low</span>{% endif %}<div class="t-sub">{{ i.supplier|default:"" }}</div></td>
+          <td class="text-right num strong">{{ i.quantity|floatformat:"-3" }} {{ i.unit }}</td>
+          <td class="text-right num muted">{{ i.reorder_level|floatformat:"-3" }}</td>
+          <td class="text-right num">{{ i.stock_value|inr }}</td>
+          <td>
+            <form method="post" action="{% url 'restaurant:inventory_move' i.pk %}" class="row" style="gap:6px">{% csrf_token %}
+              <select name="reason" class="input" style="height:32px;font-size:12.5px;width:120px"><option value="purchase">+ Purchase</option><option value="usage">− Usage</option><option value="wastage">− Wastage</option><option value="adjust">± Adjust</option></select>
+              <input type="number" step="0.001" name="change" class="input" style="height:32px;width:90px" placeholder="Qty" required>
+              <button class="btn btn-soft btn-xs">Save</button>
+            </form>
+          </td>
+          <td class="text-right"><a class="btn btn-ghost btn-xs" href="{% url 'restaurant:inventory_edit' i.pk %}"><i data-lucide="pencil" class="icon-sm"></i></a></td>
+        </tr>
+      {% empty %}<tr><td colspan="6"><div class="empty"><div class="em-ico"><i data-lucide="package"></i></div><b>No stock items</b>Track rice, chicken, oil, milk… and get low-stock alerts.</div></td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Recent movements</h3></div>
+    <div class="card-body" style="padding-top:6px">
+      {% for m in recent %}
+      <div class="timeline-item"><span class="tl-dot" style="{% if m.change < 0 %}background:var(--red);box-shadow:0 0 0 4px var(--red-bg){% endif %}"></span>
+        <div><b class="small">{{ m.item.name }} {% if m.change > 0 %}+{% endif %}{{ m.change|floatformat:"-3" }} {{ m.item.unit }}</b><div class="muted tiny">{{ m.get_reason_display }}{% if m.created_by %} · {{ m.created_by.display_name }}{% endif %} · {{ m.created_at|timesince }} ago</div></div></div>
+      {% empty %}<p class="muted small">No stock movements yet.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Home delivery{% endblock %}
+{% block heading %}Home delivery{% endblock %}
+{% block subheading %}Your own fleet — zero commission{% endblock %}
+{% block top_actions %}<a class="btn btn-outline btn-sm" href="{% url 'restaurant:pos_new' 'delivery' %}"><i data-lucide="plus" class="icon-sm"></i>Delivery order</a>{% endblock %}
+{% block content %}
+<div class="grid g-4 mb-3">
+  {% for key, label, list in columns %}
+  <div class="card stat{% if forloop.counter == 2 %} lime{% elif forloop.counter == 3 %} blue{% endif %}"><div class="label">{{ label }}</div><div class="value">{{ list|length }}</div><div class="hint">orders</div></div>
+  {% endfor %}
+  <div class="card stat violet"><div class="label">Delivered today</div><div class="value">{{ delivered_today }}</div><div class="hint">COD collected {{ cod_today|inr }}</div></div>
+</div>
+
+<div class="grid g-side">
+  <div class="grid g-3" style="align-items:start">
+    {% for key, label, list in columns %}
+    <div>
+      <div class="row mb-2"><b>{{ label }}</b><span class="pill right">{{ list|length }}</span></div>
+      {% for o in list %}
+      <div class="card card-pad mb-2" style="padding:14px">
+        <div class="row"><b>#{{ o.number }}</b><span class="muted tiny">{{ o.age_display }} ago</span>{% badge o.payment_status o.get_payment_status_display %}</div>
+        <div class="small mt-1"><b>{{ o.customer_name|default:"Guest" }}</b> · <a href="tel:{{ o.customer_phone }}">{{ o.customer_phone }}</a></div>
+        <div class="small muted mt-1"><i data-lucide="map-pin" class="icon-sm" style="vertical-align:-3px"></i> {{ o.delivery_address|truncatechars:90 }}</div>
+        <div class="row mt-2 small"><span class="muted">{{ o.kitchen_status }}</span><b class="right num">{{ o.total|inr }}</b></div>
+        {% if o.rider %}<div class="pill mt-2"><i data-lucide="bike" class="icon-sm"></i>{{ o.rider.display_name }} · {{ o.get_delivery_status_display }}</div>{% endif %}
+        {% if key != "picked" %}
+        <form method="post" action="{% url 'restaurant:delivery_assign' o.pk %}" class="row mt-2">{% csrf_token %}
+          <select name="rider" class="input" style="height:34px;font-size:13px">
+            <option value="auto">Auto-assign nearest free</option>
+            {% for r in riders %}<option value="{{ r.pk }}"{% if o.rider_id == r.pk %} selected{% endif %}>{{ r.display_name }} {% if r.is_online %}● online{% else %}○ offline{% endif %} · {{ r.active }} active</option>{% endfor %}
+          </select>
+          <button class="btn btn-soft btn-sm">{% if o.rider %}Reassign{% else %}Assign{% endif %}</button>
+        </form>
+        {% endif %}
+        <a class="btn btn-ghost btn-xs mt-1" href="{% url 'restaurant:pos_order' o.pk %}">Open order</a>
+      </div>
+      {% empty %}
+      <div class="card"><div class="empty" style="padding:22px"><span class="muted small">Nothing here</span></div></div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Riders</h3>{% if allowed_modules|has_module:"staff" %}<a class="right card-link" href="{% url 'restaurant:staff_add' %}">Add rider</a>{% endif %}</div>
+    {% for r in riders %}
+      <div class="list-row">
+        <span class="avatar" style="{% if not r.is_online %}filter:grayscale(1);opacity:.6{% endif %}">{{ r.initials }}</span>
+        <div><b>{{ r.display_name }}</b><div class="muted tiny">{{ r.phone }}</div></div>
+        <span class="right">{% if r.is_online %}<span class="badge badge-green">Online</span>{% else %}<span class="badge badge-slate">Offline</span>{% endif %}<div class="tiny muted text-right">{{ r.active }} active</div></span>
+      </div>
+    {% empty %}
+      <div class="empty"><div class="em-ico"><i data-lucide="bike"></i></div><b>No riders yet</b>Add staff with the Rider role.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>setTimeout(function () { if (!document.hidden && !document.activeElement.closest("form")) location.reload(); }, 30000);</script>{% endblock %}

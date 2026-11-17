@@ -1,0 +1,122 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Reports{% endblock %}
+{% block heading %}Reports & insights{% endblock %}
+{% block subheading %}{% if start == end %}{{ start|date:"l, d M Y" }}{% else %}{{ start|date:"d M" }} – {{ end|date:"d M Y" }}{% endif %}{% endblock %}
+{% block top_actions %}
+  <button class="btn btn-outline btn-sm" onclick="window.print()"><i data-lucide="printer" class="icon-sm"></i>Print</button>
+  <a class="btn btn-outline btn-sm" href="?from={{ start|date:'Y-m-d' }}&to={{ end|date:'Y-m-d' }}&export=items"><i data-lucide="download" class="icon-sm"></i>Item sales CSV</a>
+  <a class="btn btn-soft btn-sm" href="?from={{ start|date:'Y-m-d' }}&to={{ end|date:'Y-m-d' }}&export=orders"><i data-lucide="file-spreadsheet" class="icon-sm"></i>Orders CSV</a>
+{% endblock %}
+{% block content %}
+<form class="row wrap mb-3 no-print" method="get">
+  <div class="tabs">
+    <a class="tab{% if not preset and start == end %} active{% endif %}" href="?">Today</a>
+    <a class="tab{% if preset == '7d' %} active{% endif %}" href="?range=7d">7 days</a>
+    <a class="tab{% if preset == '30d' %} active{% endif %}" href="?range=30d">30 days</a>
+    <a class="tab{% if preset == 'month' %} active{% endif %}" href="?range=month">This month</a>
+  </div>
+  <div class="row right">
+    <input type="date" name="from" value="{{ start|date:'Y-m-d' }}" style="width:auto">
+    <span class="muted">to</span>
+    <input type="date" name="to" value="{{ end|date:'Y-m-d' }}" style="width:auto">
+    <button class="btn btn-dark">Apply</button>
+  </div>
+</form>
+
+<div class="grid g-4">
+  <div class="card stat"><div class="label">Net sales <span class="ico"><i data-lucide="indian-rupee"></i></span></div><div class="value">{{ sales|inr }}</div><div class="hint">{{ count }} completed orders</div></div>
+  <div class="card stat lime"><div class="label">Avg. order <span class="ico"><i data-lucide="receipt"></i></span></div><div class="value">{{ avg|inr }}</div><div class="hint">{{ guests }} guests served</div></div>
+  <div class="card stat violet"><div class="label">Discounts <span class="ico"><i data-lucide="percent"></i></span></div><div class="value">{{ discounts|inr }}</div><div class="hint">{{ cancelled }} cancelled orders</div></div>
+  <div class="card stat blue"><div class="label">Tax & charges <span class="ico"><i data-lucide="landmark"></i></span></div><div class="value">{{ tax|inr }}</div><div class="hint">service charge {{ service|inr }}</div></div>
+</div>
+
+<div class="grid g-main mt-3">
+  <div class="card">
+    <div class="card-head"><h3>{% if start == end %}Sales by hour{% else %}Daily sales{% endif %}</h3></div>
+    <div class="card-body"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Payment split</h3></div>
+    <div class="card-body">
+      {% if split %}
+      <div class="chart-box" style="height:180px"><canvas id="splitChart"></canvas></div>
+      <div class="mt-2">
+        {% for p in split %}<div class="row small" style="padding:5px 0;border-bottom:1px dashed var(--line)"><span class="strong">{{ p.method }}</span><span class="muted">{{ p.amount|percent_of:split_total }}%</span><b class="right num">{{ p.amount|inr }}</b></div>{% endfor %}
+        <div class="row small" style="padding-top:8px"><b>Total collected</b><b class="right num">{{ split_total|inr }}</b></div>
+      </div>
+      {% else %}<p class="muted mb-0">No payments in this period.</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="grid g-main mt-3">
+  <div class="card">
+    <div class="card-head"><h3>Daily item sales</h3><span class="right muted small">{{ items|length }} items · {{ total_qty }} sold</span></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Orders</th><th class="text-right">Amount</th></tr></thead>
+      <tbody>
+      {% for i in items %}<tr><td class="t-title">{{ i.name }}</td><td class="text-right num">{{ i.qty }}</td><td class="text-right num muted">{{ i.orders }}</td><td class="text-right num strong">{{ i.amount|inr }}</td></tr>
+      {% empty %}<tr><td colspan="4"><div class="empty"><b>No sales in this period</b></div></td></tr>{% endfor %}
+      </tbody>
+      {% if items %}<tfoot><tr><td>Total</td><td class="text-right">{{ total_qty }}</td><td></td><td class="text-right">{{ items_total|inr }}</td></tr></tfoot>{% endif %}
+    </table></div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h3>By order type</h3></div>
+      <div class="card-body bar-list">
+        {% for r in by_type %}<div class="bar-row"><span class="strong">{{ r.label }}</span><span class="muted small">{{ r.n }} · {{ r.s|inr }}</span><div class="bar"><span style="width:{{ r.s|percent_of:sales }}%"></span></div></div>{% empty %}<p class="muted small mb-0">No data.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>By channel</h3></div>
+      <div class="card-body bar-list">
+        {% for r in by_source %}<div class="bar-row"><span class="strong">{{ r.label }}</span><span class="muted small">{{ r.n }} · {{ r.s|inr }}</span><div class="bar"><span style="width:{{ r.s|percent_of:sales }}%"></span></div></div>{% empty %}<p class="muted small mb-0">No data.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>By staff</h3></div>
+      <div class="card-body">
+        {% for s in by_staff %}<div class="row small" style="padding:5px 0"><span class="strong">{{ s.created_by__first_name|default:s.created_by__username }}</span><span class="muted">{{ s.n }} orders</span><b class="right num">{{ s.s|inr }}</b></div>{% empty %}<p class="muted small mb-0">No POS orders.</p>{% endfor %}
+      </div>
+    </div>
+    {% if insights %}
+    <div class="card">
+      <div class="card-head"><h3><i data-lucide="sparkles" class="icon-sm" style="color:var(--lime-600);vertical-align:-3px"></i> Smart insights</h3></div>
+      <div class="card-body" style="padding-top:6px">{% for tip in insights %}<div class="insight"><span class="bullet"><i data-lucide="lightbulb" class="icon-sm"></i></span><span>{{ tip }}</span></div>{% endfor %}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.Chart) return;
+  var single = {% if start == end %}true{% else %}false{% endif %};
+  var hourly = {{ hourly|safe }};
+  var labels = single ? hourly.map(function (_, h) { return (h < 10 ? "0" : "") + h + ":00"; }) : {{ trend_labels|safe }};
+  var values = single ? hourly : {{ trend_values|safe }};
+  var ctx = document.getElementById("trendChart").getContext("2d");
+  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "#10b981"); g.addColorStop(1, "#a3e635");
+  new Chart(ctx, {
+    type: "bar",
+    data: { labels: labels, datasets: [{ data: values, backgroundColor: g, borderRadius: 8, maxBarThickness: 34 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return FX.money(c.parsed.y); } } } },
+      scales: { y: { beginAtZero: true, grid: { color: "rgba(120,140,130,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
+  });
+  var sc = document.getElementById("splitChart");
+  if (sc) {
+    new Chart(sc, {
+      type: "doughnut",
+      data: { labels: [{% for p in split %}"{{ p.method|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+              datasets: [{ data: [{% for p in split %}{{ p.amount|stringformat:"s" }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                           backgroundColor: ["#059669", "#a3e635", "#0d9488", "#7c3aed", "#f59e0b", "#64748b"], borderWidth: 0 }] },
+      options: { maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "right" } } }
+    });
+  }
+});
+</script>
+{% endblock %}

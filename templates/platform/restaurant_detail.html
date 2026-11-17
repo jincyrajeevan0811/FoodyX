@@ -1,0 +1,119 @@
+{% extends "layouts/platform.html" %}
+{% load foodyx_tags %}
+{% block page_title %}{{ r.name }}{% endblock %}
+{% block heading %}{{ r.name }}{% endblock %}
+{% block subheading %}{{ r.get_business_type_display }}{% if r.city %} · {{ r.city }}{% endif %} · joined {{ r.created_at|date:"d M Y" }}{% endblock %}
+{% block top_actions %}
+  <a class="btn btn-outline btn-sm" href="{% url 'storefront:store' r.slug %}" target="_blank" rel="noopener"><i data-lucide="external-link" class="icon-sm"></i>Store</a>
+  {% if can_manage %}<a class="btn btn-outline btn-sm" href="{% url 'saas:restaurant_permissions' r.pk %}"><i data-lucide="shield-check" class="icon-sm"></i>Role permissions</a>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="grid g-4">
+  <div class="card stat"><div class="label">Status</div><div class="value" style="font-size:20px">{% if sub %}{% badge sub.effective_status %}{% else %}—{% endif %}</div><div class="hint">{{ sub.plan.name }} · {{ sub.get_billing_cycle_display }}</div></div>
+  <div class="card stat lime"><div class="label">Valid until</div><div class="value" style="font-size:20px">{{ sub.current_period_end|date:"d M Y" }}</div><div class="hint">{% if sub.is_live %}{{ sub.days_left }} days left{% else %}Not active{% endif %}</div></div>
+  <div class="card stat violet"><div class="label">Sales (30 days)</div><div class="value">{{ stats.sales_30|inr }}</div><div class="hint">{{ stats.orders_total }} orders all time · {{ stats.orders_today }} today</div></div>
+  <div class="card stat blue"><div class="label">Setup</div><div class="value">{{ stats.menu_items }}</div><div class="hint">menu items · {{ stats.tables }} tables · {{ staff|length }} logins</div></div>
+</div>
+
+<div class="grid g-main mt-3">
+  <div class="stack">
+    {% if can_manage and sub_form %}
+    <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" class="card">
+      {% csrf_token %}<input type="hidden" name="action" value="update_subscription">
+      <div class="card-head"><h3>Subscription</h3></div>
+      <div class="card-body">{% include "partials/form_fields.html" with form=sub_form %}</div>
+      <div class="form-actions"><button class="btn btn-primary">Save subscription</button></div>
+    </form>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-head"><h3>Staff logins</h3><span class="right muted small">{{ staff|length }} total</span></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Name</th><th>Role</th><th>Login</th><th>Status</th>{% if can_manage %}<th></th>{% endif %}</tr></thead>
+        <tbody>
+        {% for u in staff %}
+          <tr>
+            <td class="t-title">{{ u.display_name }}</td><td>{{ u.role_label }}</td><td class="muted">{{ u.phone|default:u.email }}</td>
+            <td>{% if u.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Off</span>{% endif %}</td>
+            {% if can_manage %}<td class="text-right"><form method="post" action="{% url 'saas:user_toggle' u.pk %}" class="inline">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-ghost btn-xs">{% if u.is_active %}Disable{% else %}Enable{% endif %}</button></form></td>{% endif %}
+          </tr>
+        {% empty %}<tr><td colspan="5" class="muted center">No logins.</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Payments</h3>{% if can_manage %}<a class="right btn btn-outline btn-sm" href="{% url 'saas:payment_add' %}?restaurant={{ r.pk }}"><i data-lucide="plus" class="icon-sm"></i>Record payment</a>{% endif %}</div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Date</th><th>Plan</th><th>Method</th><th class="text-right">Total</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for p in payments %}
+          <tr><td class="nowrap">{{ p.created_at|date:"d M Y" }}</td><td>{{ p.plan|default:"—" }} <span class="t-sub">{{ p.billing_cycle }}</span></td><td>{{ p.get_method_display }}</td><td class="text-right num strong">{{ p.total|inr }}</td><td>{% badge p.status %}</td>
+          <td>{% if p.status == "paid" %}<a class="btn btn-ghost btn-xs" href="{% url 'saas:invoice' p.pk %}" target="_blank">Invoice</a>{% endif %}</td></tr>
+        {% empty %}<tr><td colspan="6" class="muted center">No payments yet.</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="stack">
+    {% if can_manage %}
+    <div class="card card-pad">
+      <h3 style="font-size:15.5px" class="mb-2">Access</h3>
+      <div class="row between">
+        <div>{% if r.access_granted and r.is_active %}<span class="badge badge-green">Access granted</span>{% else %}<span class="badge badge-red">Access paused</span>{% endif %}
+        <p class="muted small mt-1 mb-0">Pausing blocks every login of this restaurant without deleting data.</p></div>
+      </div>
+      <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" class="mt-2" data-confirm="Change access for {{ r.name }}?">
+        {% csrf_token %}<input type="hidden" name="action" value="toggle_access">
+        <button class="btn {% if r.access_granted %}btn-outline{% else %}btn-primary{% endif %} btn-block">{% if r.access_granted %}<i data-lucide="pause-circle" class="icon-sm"></i>Pause access{% else %}<i data-lucide="play-circle" class="icon-sm"></i>Grant access{% endif %}</button>
+      </form>
+      <hr>
+      <h3 style="font-size:15.5px" class="mb-2">Quick extend</h3>
+      <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" class="row">
+        {% csrf_token %}<input type="hidden" name="action" value="extend">
+        <select name="days"><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="365">1 year</option></select>
+        <button class="btn btn-soft">Extend</button>
+      </form>
+      <hr>
+      <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" data-confirm="Reset the owner's password? The new password will be shown once.">
+        {% csrf_token %}<input type="hidden" name="action" value="reset_owner_password">
+        <button class="btn btn-outline btn-block"><i data-lucide="key-round" class="icon-sm"></i>Reset owner password</button>
+      </form>
+    </div>
+
+    <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" class="card">
+      {% csrf_token %}<input type="hidden" name="action" value="update_info">
+      <div class="card-head"><h3>Restaurant details</h3></div>
+      <div class="card-body">
+        <div class="stack" style="gap:12px">{% for field in edit_form.visible_fields %}{% include "partials/field.html" %}{% endfor %}</div>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary">Save details</button></div>
+    </form>
+    {% else %}
+    <div class="card card-pad">
+      <dl class="kv"><dt>Phone</dt><dd>{{ r.phone|default:"—" }}</dd><dt>Email</dt><dd>{{ r.email|default:"—" }}</dd><dt>GSTIN</dt><dd>{{ r.gstin|default:"—" }}</dd><dt>Address</dt><dd>{{ r.address|default:"—" }}</dd></dl>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-head"><h3>Activity</h3></div>
+      <div class="card-body" style="padding-top:6px">
+        {% for a in activity %}
+        <div class="timeline-item"><span class="tl-dot"></span><div><div class="strong small">{{ a.action }}</div><div class="muted tiny">{{ a.detail|truncatechars:60 }} · {{ a.created_at|timesince }} ago</div></div></div>
+        {% empty %}<p class="muted small">No activity yet.</p>{% endfor %}
+      </div>
+    </div>
+
+    {% if request.user.is_super_admin %}
+    <form method="post" action="{% url 'saas:restaurant_action' r.pk %}" class="card card-pad" style="border-color:var(--red-bg)">
+      {% csrf_token %}<input type="hidden" name="action" value="delete">
+      <h3 style="font-size:15px;color:var(--red)">Danger zone</h3>
+      <p class="muted small mt-1">Deleting removes the restaurant, its staff, orders and bills permanently. Type <b>{{ r.name }}</b> to confirm.</p>
+      <input type="text" name="confirm_name" placeholder="{{ r.name }}">
+      <button class="btn btn-danger btn-block mt-2">Delete restaurant</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

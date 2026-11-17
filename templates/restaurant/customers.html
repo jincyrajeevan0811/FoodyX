@@ -1,0 +1,48 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Customers{% endblock %}
+{% block heading %}Customers & loyalty{% endblock %}
+{% block subheading %}Know your regulars and reward them{% endblock %}
+{% block top_actions %}
+  <a class="btn btn-outline btn-sm" href="?export=1{% if q %}&q={{ q|urlencode }}{% endif %}"><i data-lucide="download" class="icon-sm"></i>CSV</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'restaurant:customer_add' %}"><i data-lucide="user-plus" class="icon-sm"></i>Add customer</a>
+{% endblock %}
+{% block content %}
+<div class="grid g-4 mb-3">
+  <div class="card stat"><div class="label">Customers</div><div class="value">{{ agg.n|default:0 }}</div><div class="hint">{{ new_month }} new in 30 days</div></div>
+  <div class="card stat lime"><div class="label">Repeat guests</div><div class="value">{{ repeat }}</div><div class="hint">2+ visits</div></div>
+  <div class="card stat violet"><div class="label">Points outstanding</div><div class="value">{{ agg.pts|default:0|num }}</div><div class="hint">loyalty points</div></div>
+  <div class="card stat blue"><div class="label">Lifetime spend</div><div class="value">{{ agg.spent|inr }}</div><div class="hint">by known customers</div></div>
+</div>
+<div class="row wrap between mb-3">
+  <div class="tabs">
+    <a class="tab{% if sort == 'recent' %} active{% endif %}" href="?sort=recent&q={{ q|urlencode }}">Recent</a>
+    <a class="tab{% if sort == 'spent' %} active{% endif %}" href="?sort=spent&q={{ q|urlencode }}">Top spenders</a>
+    <a class="tab{% if sort == 'visits' %} active{% endif %}" href="?sort=visits&q={{ q|urlencode }}">Most visits</a>
+    <a class="tab{% if sort == 'points' %} active{% endif %}" href="?sort=points&q={{ q|urlencode }}">Most points</a>
+  </div>
+  <form class="search-bar" method="get"><input type="hidden" name="sort" value="{{ sort }}">
+    <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Name, phone or email"></div>
+  </form>
+</div>
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Customer</th><th>Tier</th><th>Visits</th><th class="text-right">Spent</th><th class="text-right">Points</th><th>Last visit</th></tr></thead>
+    <tbody>
+    {% for c in page %}
+      <tr style="cursor:pointer" onclick="location.href='{% url 'restaurant:customer_detail' c.pk %}'">
+        <td><div class="row"><span class="avatar">{{ c.name|default:"#"|slice:":1"|upper }}</span><div><span class="t-title">{{ c.name|default:"Guest" }}</span><div class="t-sub">{{ c.phone }}</div></div></div></td>
+        <td><span class="badge {% if c.tier == 'Gold' %}badge-amber{% elif c.tier == 'Silver' %}badge-slate{% else %}badge-teal{% endif %}">{{ c.tier }}</span></td>
+        <td>{{ c.visits }}</td>
+        <td class="text-right num">{{ c.total_spent|inr }}</td>
+        <td class="text-right num strong">{{ c.loyalty_points }}</td>
+        <td class="muted small">{{ c.last_visit|date:"d M Y"|default:"—" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6"><div class="empty"><div class="em-ico"><i data-lucide="heart-handshake"></i></div><b>No customers yet</b>Customers are saved automatically when you enter a phone number on an order.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

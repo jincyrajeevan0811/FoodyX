@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}KOT {{ kot_no }} · #{{ order.number }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block body %}
+<div class="print-actions no-print">
+  <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer" class="icon-sm"></i>Print KOT</button>
+  <button class="btn btn-outline" onclick="window.close()">Close</button>
+</div>
+<div class="receipt">
+  <div class="c big">KITCHEN ORDER TICKET</div>
+  <div class="c">KOT #{{ kot_no }} · Order #{{ order.number }}</div>
+  <div class="rule"></div>
+  <table>
+    <tr><td class="big">{{ order.place_label }}</td><td class="r">{% now "h:i A" %}</td></tr>
+    <tr><td>{{ order.get_order_type_display }}</td><td class="r">{{ request.user.display_name }}</td></tr>
+  </table>
+  <div class="rule"></div>
+  <table>
+    {% for it in items %}
+    <tr><td class="big" style="width:36px">{{ it.qty }}×</td><td class="big">{{ it.name }}{% if it.station %} <small>[{{ it.station }}]</small>{% endif %}{% if it.note %}<br><small>** {{ it.note }}</small>{% endif %}</td></tr>
+    {% empty %}<tr><td>No items on this KOT.</td></tr>{% endfor %}
+  </table>
+  <div class="rule"></div>
+  {% if order.note %}<div>Note: {{ order.note }}</div>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });</script>{% endblock %}

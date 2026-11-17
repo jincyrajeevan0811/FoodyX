@@ -1,0 +1,54 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Marketing{% endblock %}
+{% block heading %}Marketing & SEO{% endblock %}
+{% block subheading %}Coupons, your store link and how you appear on Google{% endblock %}
+{% block top_actions %}<a class="btn btn-primary btn-sm" href="{% url 'restaurant:coupon_add' %}"><i data-lucide="ticket-percent" class="icon-sm"></i>New coupon</a>{% endblock %}
+{% block content %}
+<div class="card hero-card card-pad mb-3">
+  <div class="row wrap" style="position:relative;z-index:1">
+    <div>
+      <div class="muted small">Your commission-free online store</div>
+      <div style="font-size:20px;font-weight:800;word-break:break-all">{{ store_url }}</div>
+    </div>
+    <div class="row right">
+      <button class="btn btn-lime btn-sm" data-copy="{{ store_url }}"><i data-lucide="copy" class="icon-sm"></i>Copy link</button>
+      <a class="btn btn-outline btn-sm" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.3)" href="https://wa.me/?text={{ "Order online from "|add:current_restaurant.name|add:": "|add:store_url|urlencode }}" target="_blank" rel="noopener"><i data-lucide="message-circle" class="icon-sm"></i>Share on WhatsApp</a>
+      <a class="btn btn-outline btn-sm" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.3)" href="{{ store_url }}" target="_blank" rel="noopener">Open</a>
+    </div>
+  </div>
+</div>
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-head"><h3>Coupons</h3><span class="right muted small">Use at POS or in the online store</span></div>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Code</th><th>Offer</th><th>Min. order</th><th>Valid until</th><th>Used</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for c in coupons %}
+        <tr>
+          <td><span class="pill" style="font-family:monospace;font-weight:800">{{ c.code }}</span><div class="t-sub">{{ c.description }}</div></td>
+          <td class="strong">{% if c.discount_type == "percent" %}{{ c.value|floatformat:"-2" }}% off{% if c.max_discount %} (max {{ c.max_discount|inr }}){% endif %}{% else %}{{ c.value|inr }} off{% endif %}</td>
+          <td>{{ c.min_order|inr }}</td><td class="muted">{{ c.valid_until|date:"d M Y"|default:"No expiry" }}</td><td>{{ c.times_used }}</td>
+          <td>{% if c.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Off</span>{% endif %}</td>
+          <td class="text-right"><a class="btn btn-ghost btn-xs" href="{% url 'restaurant:coupon_edit' c.pk %}">Edit</a></td>
+        </tr>
+      {% empty %}<tr><td colspan="7"><div class="empty"><div class="em-ico"><i data-lucide="ticket-percent"></i></div><b>No coupons yet</b>Create WELCOME10 or a weekend offer to bring guests back.</div></td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="stack">
+    <form method="post" class="card">
+      {% csrf_token %}
+      <div class="card-head"><h3>Store SEO</h3></div>
+      <div class="card-body stack" style="gap:12px">{% for field in seo_form.visible_fields %}{% include "partials/field.html" %}{% endfor %}</div>
+      <div class="form-actions"><button class="btn btn-primary">Save SEO</button></div>
+    </form>
+    <div class="card card-pad">
+      <h3 style="font-size:15.5px">Audience</h3>
+      <div class="row between mt-2"><span class="muted">Saved customers</span><b>{{ customers_count }}</b></div>
+      <div class="row between mt-1"><span class="muted">Birthdays this month</span><b>{{ birthdays }}</b></div>
+      <a class="btn btn-soft btn-sm mt-2" href="{% url 'restaurant:customers' %}?export=1"><i data-lucide="download" class="icon-sm"></i>Export for campaigns</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}POS & Tables{% endblock %}
+{% block heading %}POS & Tables{% endblock %}
+{% block subheading %}Tap a table to start or continue an order{% endblock %}
+{% block content %}
+<div class="row wrap between mb-3">
+  <div class="legend">
+    <span><i style="background:#22c55e"></i>Free {{ counts.free }}</span>
+    <span><i style="background:#f59e0b"></i>Occupied {{ counts.occupied }}</span>
+    <span><i style="background:#3b82f6"></i>Billed {{ counts.billed }}</span>
+    <span><i style="background:#8b5cf6"></i>Reserved {{ counts.reserved }}</span>
+    <span><i style="background:#94a3b8"></i>Cleaning {{ counts.cleaning }}</span>
+  </div>
+  <div class="row">
+    <a class="btn btn-outline" href="{% url 'restaurant:pos_new' 'takeaway' %}"><i data-lucide="shopping-bag" class="icon-sm"></i>Takeaway</a>
+    {% if allowed_modules|has_module:"delivery" %}
+    <a class="btn btn-primary" href="{% url 'restaurant:pos_new' 'delivery' %}"><i data-lucide="bike" class="icon-sm"></i>Delivery</a>
+    {% endif %}
+  </div>
+</div>
+
+{% for block in areas %}
+<div class="card card-pad mb-3">
+  <div class="row mb-2">
+    <h3 style="font-size:15.5px">{% if block.area %}{{ block.area.name }}{% else %}Other tables{% endif %}</h3>
+    {% if block.area.kind == "room" %}<span class="pill"><i data-lucide="bed-double" class="icon-sm"></i>Rooms</span>{% endif %}
+    <span class="muted small right">{{ block.tables|length }} table{{ block.tables|length|pluralize }}</span>
+  </div>
+  <div class="table-grid">
+    {% for t in block.tables %}
+    <div style="position:relative">
+      <a class="tile {{ t.status }}" href="{% url 'restaurant:pos_table' t.pk %}">
+        {% if t.locked_by and t.locked_by != request.user %}<span class="t-lock"><i data-lucide="lock" class="icon-sm"></i>{{ t.locked_by.first_name|default:t.locked_by.username }}</span>{% endif %}
+        <span class="t-status">{{ t.get_status_display }}</span>
+        <span class="t-name">{{ t.name }}</span>
+        {% if t.current %}
+          <span class="t-amt num">{{ t.current.total|inr }}</span>
+          <span class="t-meta"><i data-lucide="clock" class="icon-sm" style="vertical-align:-3px"></i> {{ t.current.age_display }} · {{ t.current.kitchen_status }}</span>
+        {% else %}
+          <span class="t-meta"><i data-lucide="users" class="icon-sm" style="vertical-align:-3px"></i> {{ t.seats }} seats</span>
+        {% endif %}
+      </a>
+      {% if not t.current %}
+      <details class="tile-menu">
+        <summary aria-label="Table options"><i data-lucide="more-vertical" class="icon-sm"></i></summary>
+        <div class="pop">
+          {% for code, label in status_choices %}{% if code in "free reserved cleaning" and code != t.status %}
+          <form method="post" action="{% url 'restaurant:pos_table_status' t.pk %}">{% csrf_token %}<input type="hidden" name="status" value="{{ code }}"><button>Mark {{ label|lower }}</button></form>
+          {% endif %}{% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="card"><div class="empty"><div class="em-ico"><i data-lucide="layout-grid"></i></div><b>No tables yet</b>{% if allowed_modules|has_module:"tables" %}<a href="{% url 'restaurant:tables' %}">Add tables</a> to start taking dine-in orders.{% else %}Ask the owner to add tables.{% endif %}</div></div>
+{% endfor %}
+
+<div class="card">
+  <div class="card-head"><h3>Takeaway, delivery & room orders</h3><span class="right muted small">{{ other_orders|length }} open</span></div>
+  {% if other_orders %}
+  <div class="table-wrap"><table class="table">
+    <tbody>
+    {% for o in other_orders %}
+      <tr style="cursor:pointer" onclick="location.href='{% url 'restaurant:pos_order' o.pk %}'">
+        <td><span class="t-title">#{{ o.number }}</span><div class="t-sub">{{ o.get_order_type_display }} · {{ o.get_source_display }}</div></td>
+        <td>{{ o.customer_name|default:"Walk-in" }}<div class="t-sub">{{ o.customer_phone }}</div></td>
+        <td>{% badge o.status o.get_status_display %}</td>
+        <td>{% badge o.payment_status o.get_payment_status_display %}</td>
+        <td class="muted">{{ o.age_display }}</td>
+        <td class="text-right strong num">{{ o.total|inr }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty" style="padding:28px"><b>No open takeaway or delivery orders</b></div>{% endif %}
+</div>
+{% endblock %}

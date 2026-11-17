@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}{{ c }}{% endblock %}
+{% block heading %}{{ c.name|default:c.phone }}{% endblock %}
+{% block subheading %}{{ c.tier }} member · since {{ c.created_at|date:"M Y" }}{% endblock %}
+{% block top_actions %}
+  <a class="btn btn-outline btn-sm" href="https://wa.me/{{ c.phone|cut:'+'|cut:' ' }}" target="_blank" rel="noopener"><i data-lucide="message-circle" class="icon-sm"></i>WhatsApp</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'restaurant:customer_edit' c.pk %}"><i data-lucide="pencil" class="icon-sm"></i>Edit</a>
+{% endblock %}
+{% block content %}
+<div class="grid g-4 mb-3">
+  <div class="card stat"><div class="label">Visits</div><div class="value">{{ c.visits }}</div><div class="hint">last {{ c.last_visit|date:"d M Y"|default:"—" }}</div></div>
+  <div class="card stat lime"><div class="label">Total spent</div><div class="value">{{ c.total_spent|inr }}</div><div class="hint">lifetime</div></div>
+  <div class="card stat violet"><div class="label">Loyalty points</div><div class="value">{{ c.loyalty_points }}</div><div class="hint">available to redeem</div></div>
+  <div class="card stat blue"><div class="label">Tier</div><div class="value">{{ c.tier }}</div><div class="hint">Silver ₹8k · Gold ₹25k</div></div>
+</div>
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-head"><h3>Order history</h3></div>
+    <div class="table-wrap"><table class="table">
+      <tbody>
+      {% for o in orders %}
+        <tr><td><a class="t-title" href="{% url 'restaurant:order_detail' o.pk %}">#{{ o.number }}</a><div class="t-sub">{{ o.get_order_type_display }} · {{ o.get_source_display }}</div></td>
+        <td class="muted small">{{ o.created_at|date:"d M Y, h:i A" }}</td><td>{% badge o.status o.get_status_display %}</td><td class="text-right num strong">{{ o.total|inr }}</td></tr>
+      {% empty %}<tr><td class="muted center">No orders yet.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="stack">
+    <div class="card card-pad">
+      <dl class="kv"><dt>Phone</dt><dd>{{ c.phone }}</dd><dt>Email</dt><dd>{{ c.email|default:"—" }}</dd><dt>Birthday</dt><dd>{{ c.birthday|date:"d M"|default:"—" }}</dd><dt>Address</dt><dd>{{ c.address|default:"—" }}</dd>{% if c.notes %}<dt>Notes</dt><dd>{{ c.notes }}</dd>{% endif %}</dl>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Favourites</h3></div>
+      <div class="card-body">{% for f in favourites %}<div class="row small" style="padding:5px 0"><span class="strong">{{ f.name }}</span><span class="right pill">×{{ f.q }}</span></div>{% empty %}<p class="muted small mb-0">No orders yet.</p>{% endfor %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

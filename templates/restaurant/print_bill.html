@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load foodyx_tags %}
+{% block title %}Bill {{ order.bill_no|default:order.number }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block body %}
+{% with r=order.restaurant %}
+<div class="print-actions no-print">
+  <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer" class="icon-sm"></i>Print</button>
+  <button class="btn btn-outline" id="copyBill"><i data-lucide="message-circle" class="icon-sm"></i>Copy for WhatsApp</button>
+  <a class="btn btn-outline" href="{% if order.is_open %}{% url 'restaurant:pos_order' order.pk %}{% else %}{% url 'restaurant:bills' %}{% endif %}">Back</a>
+</div>
+<div class="receipt" id="receipt">
+  <h2>{{ r.name }}</h2>
+  <div class="c">{{ r.address|linebreaksbr }}{% if r.phone %}<br>Ph: {{ r.phone }}{% endif %}{% if r.gstin %}<br>GSTIN: {{ r.gstin }}{% endif %}{% if r.fssai %}<br>FSSAI: {{ r.fssai }}{% endif %}</div>
+  <div class="rule"></div>
+  <div class="c big">{% if r.charge_gst %}TAX INVOICE{% else %}BILL{% endif %}</div>
+  <table>
+    <tr><td>Bill: {{ order.bill_no|default:"—" }}</td><td class="r">{{ order.billed_at|default:order.created_at|date:"d-m-Y h:i A" }}</td></tr>
+    <tr><td>Order: #{{ order.number }}</td><td class="r">{{ order.place_label }}</td></tr>
+    {% if order.customer_name %}<tr><td colspan="2">Guest: {{ order.customer_name }} {{ order.customer_phone }}</td></tr>{% endif %}
+    {% if order.created_by %}<tr><td colspan="2">Served by: {{ order.created_by.display_name }}</td></tr>{% endif %}
+  </table>
+  <div class="rule"></div>
+  <table>
+    <tr><td><b>Item</b></td><td class="r"><b>Qty</b></td><td class="r"><b>Amt</b></td></tr>
+    {% for it in items %}<tr><td>{{ it.name }}</td><td class="r">{{ it.qty }}</td><td class="r">{{ it.line_total|floatformat:2 }}</td></tr>{% endfor %}
+  </table>
+  <div class="rule"></div>
+  <table>
+    <tr><td>Subtotal</td><td class="r">{{ order.subtotal|floatformat:2 }}</td></tr>
+    {% if order.discount %}<tr><td>Discount{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</td><td class="r">-{{ order.discount|floatformat:2 }}</td></tr>{% endif %}
+    {% if order.service_charge %}<tr><td>Service charge ({{ r.service_charge_percent|floatformat:"-2" }}%)</td><td class="r">{{ order.service_charge|floatformat:2 }}</td></tr>{% endif %}
+    {% if order.tax %}<tr><td>CGST ({{ r.half_gst_percent|floatformat:"-2" }}%)</td><td class="r">{{ order.half_tax|floatformat:2 }}</td></tr><tr><td>SGST ({{ r.half_gst_percent|floatformat:"-2" }}%)</td><td class="r">{{ order.half_tax|floatformat:2 }}</td></tr>{% endif %}
+    {% if order.delivery_fee %}<tr><td>Delivery fee</td><td class="r">{{ order.delivery_fee|floatformat:2 }}</td></tr>{% endif %}
+    {% if order.round_off %}<tr><td>Round off</td><td class="r">{{ order.round_off }}</td></tr>{% endif %}
+    <tr class="big"><td>TOTAL</td><td class="r">{{ order.total|inr:2 }}</td></tr>
+  </table>
+  {% if payments %}
+  <div class="rule"></div>
+  <table>{% for p in payments %}<tr><td>Paid · {{ p.get_method_display }}</td><td class="r">{{ p.amount|floatformat:2 }}</td></tr>{% endfor %}
+  {% if order.balance %}<tr><td><b>Balance due</b></td><td class="r"><b>{{ order.balance|floatformat:2 }}</b></td></tr>{% endif %}</table>
+  {% endif %}
+  <div class="rule"></div>
+  <div class="c">{{ r.bill_footer }}</div>
+  <div class="c tiny" style="margin-top:6px">Powered by {{ site_name }}</div>
+</div>
+{% endwith %}
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("copyBill").addEventListener("click", function () {
+  var text = document.getElementById("receipt").innerText;
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { document.getElementById("copyBill").textContent = "Copied — paste in WhatsApp"; });
+});
+{% if auto_print %}window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });{% endif %}
+</script>
+{% endblock %}

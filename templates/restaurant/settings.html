@@ -1,0 +1,29 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block subheading %}Restaurant profile, billing, ordering channels and payments{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <form method="post" class="card">
+    {% csrf_token %}
+    {% if form.errors %}<div class="alert alert-red" style="margin:20px 24px 0">Please fix the highlighted fields.</div>{% endif %}
+    {% for key, title, fields in form.sections %}
+    <div class="form-section" id="{{ key }}">
+      <h4><i data-lucide="{% if key == 'profile' %}store{% elif key == 'billing' %}receipt{% elif key == 'ordering' %}qr-code{% else %}credit-card{% endif %}" class="icon-sm"></i>{{ title }}</h4>
+      <div class="form-grid">{% for field in fields %}{% include "partials/field.html" %}{% endfor %}</div>
+    </div>
+    {% endfor %}
+    <div class="form-actions"><button class="btn btn-primary"><i data-lucide="save" class="icon-sm"></i>Save settings</button></div>
+  </form>
+  <div class="stack">
+    <div class="card card-pad" style="position:sticky;top:82px">
+      <h3 style="font-size:15.5px" class="mb-2">Jump to</h3>
+      {% for key, title, fields in form.sections %}<a class="dd-item" href="#{{ key }}">{{ title }}</a>{% endfor %}
+      <hr>
+      <a class="dd-item" href="{% url 'restaurant:hardware' %}"><i data-lucide="printer" class="icon-sm"></i>Printers & hardware</a>
+      <a class="dd-item" href="{% url 'storefront:store' current_restaurant.slug %}" target="_blank"><i data-lucide="globe" class="icon-sm"></i>Preview online store</a>
+      <div class="alert alert-amber mt-2 small"><i data-lucide="info" class="icon-sm"></i><div>GST is {% if current_restaurant.charge_gst %}<b>on</b> at {{ current_restaurant.gst_percent }}%{% else %}<b>off</b> — bills show no GST{% endif %}.</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

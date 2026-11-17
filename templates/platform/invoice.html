@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load foodyx_tags %}
+{% block title %}Invoice {{ pay.invoice_no }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block body %}
+<div class="print-actions no-print">
+  <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer" class="icon-sm"></i>Print / save as PDF</button>
+  <button class="btn btn-outline" onclick="history.back()">Back</button>
+</div>
+<div class="invoice">
+  <div class="row between" style="align-items:flex-start">
+    <div>
+      <div class="row" style="gap:10px">{% include "partials/brand.html" %}</div>
+      <p class="muted small mt-2" style="white-space:pre-line">{{ ps.company_name|default:ps.site_name }}
+{{ ps.company_address }}{% if ps.company_gstin %}
+GSTIN: {{ ps.company_gstin }}{% endif %}</p>
+    </div>
+    <div class="text-right">
+      <h2 style="font-size:28px">Tax invoice</h2>
+      <p class="muted mt-1">No. <b>{{ pay.invoice_no }}</b><br>Date: {{ pay.paid_at|date:"d M Y" }}</p>
+    </div>
+  </div>
+  <hr>
+  <div class="row between" style="align-items:flex-start">
+    <div><div class="label">Billed to</div><b>{{ pay.restaurant.name }}</b><p class="muted small" style="white-space:pre-line">{{ pay.restaurant.address }}{% if pay.restaurant.gstin %}
+GSTIN: {{ pay.restaurant.gstin }}{% endif %}</p></div>
+    <div class="text-right"><div class="label">Payment</div><b>{{ pay.get_method_display }}</b><p class="muted small">{{ pay.razorpay_payment_id|default:pay.reference }}</p></div>
+  </div>
+  <table class="table mt-3">
+    <thead><tr><th>Description</th><th>Period</th><th class="text-right">Amount</th></tr></thead>
+    <tbody>
+      <tr><td><b>{{ pay.plan|default:"Subscription" }} plan</b> — {{ ps.site_name }} restaurant software (SAC 998314)</td><td>{{ pay.billing_cycle|capfirst }}</td><td class="text-right num">{{ pay.amount|inr:2 }}</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="2" class="text-right">GST ({{ ps.gst_percent }}%)</td><td class="text-right num">{{ pay.gst_amount|inr:2 }}</td></tr>
+      <tr><td colspan="2" class="text-right">Total</td><td class="text-right num" style="font-size:17px">{{ pay.total|inr:2 }}</td></tr>
+    </tfoot>
+  </table>
+  <p class="muted small mt-4 center">Thank you for choosing {{ ps.site_name }}. This is a computer-generated invoice.</p>
+</div>
+{% endblock %}

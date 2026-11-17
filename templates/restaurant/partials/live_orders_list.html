@@ -1,0 +1,33 @@
+{% load foodyx_tags %}
+<div class="row wrap mb-3">
+  <span class="pill"><i data-lucide="radio" class="icon-sm" style="color:var(--green)"></i>{{ orders|length }} open order{{ orders|length|pluralize }}</span>
+  <span class="pill"><i data-lucide="indian-rupee" class="icon-sm"></i>{{ open_total|inr }} on the floor</span>
+  <span class="muted small right">Updated {% now "h:i:s A" %}</span>
+</div>
+{% if orders %}
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+  {% for o in orders %}
+  <div class="card">
+    <div class="card-head" style="padding:14px 16px">
+      <div><b style="font-size:16px">{{ o.place_label }}</b><div class="muted tiny">#{{ o.number }} · {{ o.get_source_display }}{% if o.created_by %} · {{ o.created_by.display_name }}{% endif %}</div></div>
+      <span class="right">{% badge o.status o.get_status_display %}</span>
+    </div>
+    <div style="padding:6px 16px">
+      {% for it in o.items.all %}{% if it.kot_status != "cancelled" %}
+      <div class="row small" style="padding:5px 0;border-bottom:1px dashed var(--line)">
+        {{ it.food_type|food_dot }}<span class="strong">{{ it.qty }} × {{ it.name }}</span>
+        <span class="right">{% badge it.kot_status it.get_kot_status_display %}</span>
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+    <div class="card-foot row small">
+      <span class="muted"><i data-lucide="clock" class="icon-sm" style="vertical-align:-3px"></i> {{ o.age_display }} · {{ o.kitchen_status }}</span>
+      <b class="right num">{{ o.total|inr }}</b>
+      {% if allowed_modules|has_module:"pos" %}<a class="btn btn-soft btn-xs" href="{% url 'restaurant:pos_order' o.pk %}">Open</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="empty"><div class="em-ico"><i data-lucide="party-popper"></i></div><b>No open orders</b>All tables are settled.</div></div>
+{% endif %}

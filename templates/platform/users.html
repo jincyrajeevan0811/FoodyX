@@ -1,0 +1,33 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Users{% endblock %}
+{% block heading %}Users{% endblock %}
+{% block subheading %}Every login across the platform{% endblock %}
+{% block content %}
+<form class="search-bar mb-3" method="get">
+  <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Name, phone, email or restaurant"></div>
+  <select name="role" style="width:auto" data-autosubmit>
+    <option value="">All roles</option>
+    {% for code, label in roles %}<option value="{{ code }}"{% if role == code %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-outline">Filter</button>
+</form>
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>User</th><th>Role</th><th>Restaurant</th><th>Login</th><th>Last sign-in</th><th>Status</th>{% if can_manage %}<th></th>{% endif %}</tr></thead>
+    <tbody>
+    {% for u in page %}
+      <tr>
+        <td><div class="row"><span class="avatar">{{ u.initials }}</span><span class="t-title">{{ u.display_name }}<div class="t-sub">@{{ u.username }}</div></span></div></td>
+        <td>{{ u.role_label }}</td>
+        <td>{% if u.restaurant %}<a href="{% url 'saas:restaurant_detail' u.restaurant_id %}">{{ u.restaurant.name }}</a>{% else %}<span class="muted">Platform</span>{% endif %}</td>
+        <td class="muted">{{ u.phone|default:"" }}<div class="t-sub">{{ u.email }}</div></td>
+        <td class="muted small nowrap">{{ u.last_login|date:"d M Y, h:i A"|default:"Never" }}</td>
+        <td>{% if u.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Disabled</span>{% endif %}</td>
+        {% if can_manage %}<td class="text-right">{% if u != request.user %}<form method="post" action="{% url 'saas:user_toggle' u.pk %}" class="inline">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-outline btn-xs">{% if u.is_active %}Disable{% else %}Enable{% endif %}</button></form>{% endif %}</td>{% endif %}
+      </tr>
+    {% empty %}<tr><td colspan="7" class="muted center">No users found.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

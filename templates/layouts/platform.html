@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{% block page_title %}Platform{% endblock %} · {{ site_name }} admin{% endblock %}
+{% block body %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'saas:overview' %}">{% include "partials/brand.html" %}<span class="brand-tag">ADMIN</span></a>
+    <div class="side-scroll">
+      <div class="side-group">
+        <div class="side-label">Platform</div>
+        <a class="side-link" href="{% url 'saas:overview' %}"><i data-lucide="layout-dashboard"></i>Overview</a>
+        <a class="side-link" href="{% url 'saas:restaurants' %}"><i data-lucide="store"></i>Restaurants & clients</a>
+        <a class="side-link" href="{% url 'saas:plans' %}"><i data-lucide="badge-indian-rupee"></i>Plans & pricing</a>
+        <a class="side-link" href="{% url 'saas:payments' %}"><i data-lucide="receipt-indian-rupee"></i>Payments</a>
+        <a class="side-link" href="{% url 'saas:users' %}"><i data-lucide="users"></i>Users</a>
+        <a class="side-link" href="{% url 'saas:team' %}"><i data-lucide="shield-check"></i>Team & roles</a>
+        <a class="side-link" href="{% url 'saas:activity' %}"><i data-lucide="history"></i>Activity log</a>
+        {% if can_settings %}<a class="side-link" href="{% url 'saas:settings' %}"><i data-lucide="settings"></i>Platform settings</a>{% endif %}
+      </div>
+      <div class="side-group">
+        <div class="side-label">Shortcuts</div>
+        <a class="side-link" href="{% url 'core:landing' %}" target="_blank" rel="noopener"><i data-lucide="globe"></i>Public website</a>
+        {% if request.user.is_staff %}<a class="side-link" href="/django-admin/" target="_blank" rel="noopener"><i data-lucide="database"></i>Raw data (Django admin)</a>{% endif %}
+        <a class="side-link" href="{% url 'saas:health' %}"><i data-lucide="activity"></i>Health check</a>
+      </div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" data-menu-toggle aria-label="Menu"><i data-lucide="menu"></i></button>
+      <div>
+        <h1>{% block heading %}Platform overview{% endblock %}</h1>
+        <div class="sub">{% block subheading %}{{ site_name }} control centre{% endblock %}</div>
+      </div>
+      <div class="top-actions">
+        {% block top_actions %}{% endblock %}
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle dark mode"><i data-lucide="moon"></i></button>
+        <div class="dropdown" data-dropdown>
+          <button class="user-chip icon-btn" style="width:auto;height:auto;border:0;background:none" data-dropdown-trigger>
+            <span class="avatar">{{ request.user.initials }}</span>
+            <span class="who" style="text-align:left"><b>{{ request.user.display_name }}</b><small>{{ request.user.role_label }}</small></span>
+          </button>
+          <div class="dropdown-menu" style="min-width:200px">
+            <form method="post" action="{% url 'core:logout' %}">{% csrf_token %}
+              <button class="dd-item w-100" style="border:0;background:none;cursor:pointer;font:inherit"><i data-lucide="log-out" class="icon-sm"></i>Sign out</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="content">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+{% endblock %}

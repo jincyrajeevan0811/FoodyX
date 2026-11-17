@@ -1,0 +1,7 @@
+{% if page.has_other_pages %}
+<div class="pagination">
+  <span class="muted small" style="margin-right:auto">Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} records</span>
+  {% if page.has_previous %}<a class="btn btn-outline btn-sm" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}"><i data-lucide="chevron-left" class="icon-sm"></i> Prev</a>{% endif %}
+  {% if page.has_next %}<a class="btn btn-outline btn-sm" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.next_page_number }}">Next <i data-lucide="chevron-right" class="icon-sm"></i></a>{% endif %}
+</div>
+{% endif %}

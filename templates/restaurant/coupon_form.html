@@ -1,0 +1,13 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Coupon{% endblock %}
+{% block heading %}{% if coupon %}Edit {{ coupon.code }}{% else %}New coupon{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:760px">
+  {% csrf_token %}
+  <div class="card-body">{% include "partials/form_fields.html" %}</div>
+  <div class="form-actions">
+    {% if coupon %}<button class="btn btn-ghost text-red" name="delete" value="1" style="margin-right:auto" formnovalidate onclick="return confirm('Delete this coupon?')">Delete</button>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'restaurant:marketing' %}">Cancel</a><button class="btn btn-primary">Save coupon</button>
+  </div>
+</form>
+{% endblock %}

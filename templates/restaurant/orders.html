@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Orders{% endblock %}
+{% block heading %}Orders{% endblock %}
+{% block subheading %}POS, QR and online orders in one place{% endblock %}
+{% block content %}
+<div class="row wrap between mb-3">
+  <div class="tabs">
+    {% for key, label in tabs %}
+      <a class="tab{% if tab == key %} active{% endif %}" href="?tab={{ key }}">{{ label }}{% if key == "awaiting" and counts.awaiting %} <span class="n">{{ counts.awaiting }}</span>{% elif key == "active" and counts.active %} <span class="n">{{ counts.active }}</span>{% endif %}</a>
+    {% endfor %}
+  </div>
+  <form class="search-bar" method="get">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <select name="source" style="width:auto" data-autosubmit>
+      <option value="">All sources</option>
+      <option value="pos"{% if source == "pos" %} selected{% endif %}>POS</option>
+      <option value="qr"{% if source == "qr" %} selected{% endif %}>QR</option>
+      <option value="online"{% if source == "online" %} selected{% endif %}>Online</option>
+    </select>
+    <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Order, bill, table, phone…"></div>
+  </form>
+</div>
+
+{% if tab == "awaiting" %}
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">
+  {% for o in page %}
+    <div class="card">
+      <div class="card-head">
+        <div><b style="font-size:16px">{{ o.place_label }}</b><div class="muted tiny">#{{ o.number }} · {{ o.get_source_display }} · {{ o.created_at|timesince }} ago</div></div>
+        <span class="right badge badge-amber">Awaiting</span>
+      </div>
+      <div class="card-body" style="padding:10px 20px">
+        {% if o.customer_name or o.customer_phone %}<div class="small mb-2"><i data-lucide="user" class="icon-sm" style="vertical-align:-3px"></i> {{ o.customer_name }} {{ o.customer_phone }}</div>{% endif %}
+        {% for it in o.items.all %}<div class="row small" style="padding:4px 0">{{ it.food_type|food_dot }}<span class="strong">{{ it.qty }} × {{ it.name }}</span>{% if it.note %}<span class="muted">“{{ it.note }}”</span>{% endif %}<span class="right num">{{ it.line_total|inr }}</span></div>{% endfor %}
+        {% if o.delivery_address %}<div class="small muted mt-2"><i data-lucide="map-pin" class="icon-sm" style="vertical-align:-3px"></i> {{ o.delivery_address }}</div>{% endif %}
+        {% if o.note %}<div class="small text-amber mt-1">Note: {{ o.note }}</div>{% endif %}
+      </div>
+      <div class="card-foot row">
+        <b class="num">{{ o.total|inr }}</b>{% if o.payment_status == "paid" %}<span class="badge badge-green">Paid online</span>{% endif %}
+        <form method="post" action="{% url 'restaurant:order_accept' o.pk %}" class="row right">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn btn-ghost btn-sm text-red" name="decision" value="reject" data-confirm-btn>Reject</button>
+          <button class="btn btn-primary btn-sm" name="decision" value="accept"><i data-lucide="check" class="icon-sm"></i>Accept</button>
+        </form>
+      </div>
+    </div>
+  {% empty %}
+    <div class="card" style="grid-column:1/-1"><div class="empty"><div class="em-ico"><i data-lucide="inbox"></i></div><b>No orders waiting</b>QR and online orders that need your OK appear here.</div></div>
+  {% endfor %}
+  </div>
+{% else %}
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Order</th><th>Place</th><th>Customer</th><th>Status</th><th>Payment</th><th>Time</th><th class="text-right">Total</th></tr></thead>
+    <tbody>
+    {% for o in page %}
+      <tr style="cursor:pointer" onclick="location.href='{% url 'restaurant:order_detail' o.pk %}'">
+        <td><span class="t-title">#{{ o.number }}</span><div class="t-sub">{{ o.get_source_display }}{% if o.bill_no %} · {{ o.bill_no }}{% endif %}</div></td>
+        <td>{{ o.place_label }}</td>
+        <td>{{ o.customer_name|default:"—" }}<div class="t-sub">{{ o.customer_phone }}</div></td>
+        <td>{% badge o.status o.get_status_display %}</td>
+        <td>{% badge o.payment_status o.get_payment_status_display %}</td>
+        <td class="nowrap muted small">{{ o.created_at|date:"d M, h:i A" }}</td>
+        <td class="text-right strong num">{{ o.total|inr }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7"><div class="empty"><div class="em-ico"><i data-lucide="clipboard-list"></i></div><b>No orders here</b></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if tab == "awaiting" %}<script>setTimeout(function () { if (!document.hidden) location.reload(); }, 20000);</script>{% endif %}{% endblock %}

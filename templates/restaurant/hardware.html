@@ -1,0 +1,37 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Hardware{% endblock %}
+{% block heading %}Hardware{% endblock %}
+{% block subheading %}Printers, kitchen displays, cash drawers and more{% if limit %} · plan allows {{ limit }} devices{% endif %}{% endblock %}
+{% block top_actions %}<a class="btn btn-primary btn-sm" href="{% url 'restaurant:device_add' %}"><i data-lucide="plus" class="icon-sm"></i>Add device</a>{% endblock %}
+{% block content %}
+<div class="grid g-4 mb-3">
+  {% for code, label in kinds %}
+  <a class="quick" href="{% url 'restaurant:device_add' %}?kind={{ code }}">
+    <span class="qi"><i data-lucide="{% if code == 'bill_printer' or code == 'kot_printer' %}printer{% elif code == 'kds' %}monitor{% elif code == 'cash_drawer' %}archive{% elif code == 'scanner' %}scan-barcode{% elif code == 'scale' %}scale{% elif code == 'terminal' %}credit-card{% else %}tablet-smartphone{% endif %}" class="icon-sm"></i></span>{{ label }}
+  </a>
+  {% endfor %}
+</div>
+<div class="card">
+  <div class="card-head"><h3>Connected devices</h3></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Device</th><th>Type</th><th>Connection</th><th>Station</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for d in devices %}
+      <tr>
+        <td class="t-title">{{ d.name }}<div class="t-sub">{{ d.address }}</div></td>
+        <td>{{ d.get_kind_display }}{% if d.kind == "bill_printer" or d.kind == "kot_printer" %}<div class="t-sub">{{ d.get_paper_width_display }}</div>{% endif %}</td>
+        <td>{{ d.get_connection_display }}</td><td>{{ d.station|default:"—" }}</td>
+        <td>{% if d.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-slate">Off</span>{% endif %}</td>
+        <td class="text-right nowrap">
+          {% if d.kind == "bill_printer" or d.kind == "kot_printer" %}<a class="btn btn-soft btn-xs" href="{% url 'restaurant:device_test' d.pk %}" target="_blank">Test print</a>{% endif %}
+          <a class="btn btn-ghost btn-xs" href="{% url 'restaurant:device_edit' d.pk %}">Edit</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6"><div class="empty"><div class="em-ico"><i data-lucide="printer"></i></div><b>No devices yet</b>FoodyX prints through your browser to any thermal printer — add it here to keep track and test it.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+<div class="alert alert-blue mt-3"><i data-lucide="lightbulb" class="icon-sm"></i><div><b>Tip:</b> set your thermal printer as the default printer and choose 80 mm (or 58 mm) paper with no margins. Bills and KOTs are formatted for receipt paper automatically.</div></div>
+{% endblock %}

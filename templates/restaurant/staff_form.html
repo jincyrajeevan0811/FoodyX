@@ -1,0 +1,19 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Staff{% endblock %}
+{% block heading %}{% if member %}Edit {{ member.display_name }}{% else %}Add staff{% endif %}{% endblock %}
+{% block subheading %}They sign in with their own mobile number and password{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <form method="post" class="card">
+    {% csrf_token %}
+    <div class="card-body">{% include "partials/form_fields.html" %}</div>
+    <div class="form-actions"><a class="btn btn-ghost" href="{% url 'restaurant:staff' %}">Cancel</a><button class="btn btn-primary">Save</button></div>
+  </form>
+  <div class="card card-pad">
+    <h3 style="font-size:15.5px">Roles</h3>
+    {% for code, desc in role_desc.items %}{% if code != "owner" %}
+      <div class="timeline-item"><span class="tl-dot"></span><div><b class="small">{{ code|cut:"_"|capfirst }}</b><p class="muted small mb-0">{{ desc }}</p></div></div>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+{% endblock %}

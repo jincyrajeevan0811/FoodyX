@@ -1,0 +1,48 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}{% if plan %}Edit {{ plan.name }}{% else %}New plan{% endif %}{% endblock %}
+{% block heading %}{% if plan %}Edit “{{ plan.name }}”{% else %}New plan{% endif %}{% endblock %}
+{% block subheading %}Prices exclude GST. Features decide which modules restaurants on this plan can open.{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:960px">
+  {% csrf_token %}
+  <div class="form-section">
+    <h4><i data-lucide="tag" class="icon-sm"></i>Plan</h4>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.name %}
+      {% include "partials/field.html" with field=form.tagline %}
+      {% include "partials/field.html" with field=form.price_monthly %}
+      {% include "partials/field.html" with field=form.price_yearly %}
+      {% include "partials/field.html" with field=form.trial_days %}
+      {% include "partials/field.html" with field=form.sort_order %}
+      {% include "partials/field.html" with field=form.is_custom_pricing %}
+    </div>
+  </div>
+  <div class="form-section">
+    <h4><i data-lucide="gauge" class="icon-sm"></i>Limits <span class="muted small" style="font-weight:500">(0 = unlimited)</span></h4>
+    <div class="form-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      {% include "partials/field.html" with field=form.max_staff %}
+      {% include "partials/field.html" with field=form.max_tables %}
+      {% include "partials/field.html" with field=form.max_devices %}
+    </div>
+  </div>
+  <div class="form-section">
+    <h4><i data-lucide="puzzle" class="icon-sm"></i>Features</h4>
+    {% include "partials/field.html" with field=form.features %}
+    <div class="mt-2">{% include "partials/field.html" with field=form.highlights %}</div>
+  </div>
+  <div class="form-section">
+    <h4><i data-lucide="eye" class="icon-sm"></i>Visibility</h4>
+    <div class="row wrap" style="gap:24px">
+      {% include "partials/field.html" with field=form.is_active %}
+      {% include "partials/field.html" with field=form.is_public %}
+      {% include "partials/field.html" with field=form.is_popular %}
+    </div>
+  </div>
+  <div class="form-actions">
+    {% if plan %}<button form="del-plan" class="btn btn-ghost text-red" style="margin-right:auto">Delete plan</button>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'saas:plans' %}">Cancel</a>
+    <button class="btn btn-primary">Save plan</button>
+  </div>
+</form>
+{% if plan %}<form id="del-plan" method="post" action="{% url 'saas:plan_delete' plan.pk %}" data-confirm="Delete this plan? Plans with subscribers are deactivated instead.">{% csrf_token %}</form>{% endif %}
+{% endblock %}

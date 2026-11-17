@@ -1,0 +1,6 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Role permissions{% endblock %}
+{% block heading %}Role permissions{% endblock %}
+{% block subheading %}Choose which pages each role can open{% endblock %}
+{% block top_actions %}<a class="btn btn-outline btn-sm" href="{% url 'restaurant:staff' %}"><i data-lucide="arrow-left" class="icon-sm"></i>Staff</a>{% endblock %}
+{% block content %}{% include "partials/permissions_matrix.html" %}{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Tables & rooms{% endblock %}
+{% block heading %}Tables & rooms{% endblock %}
+{% block subheading %}{{ table_count }} table{{ table_count|pluralize }}{% if limit %} · plan allows {{ limit }}{% endif %}{% endblock %}
+{% block top_actions %}
+  <a class="btn btn-outline btn-sm" href="{% url 'restaurant:tables_qr' %}"><i data-lucide="qr-code" class="icon-sm"></i>Print QR codes</a>
+  <a class="btn btn-soft btn-sm" href="{% url 'restaurant:area_add' %}"><i data-lucide="map" class="icon-sm"></i>Add area</a>
+  <a class="btn btn-primary btn-sm" href="{% url 'restaurant:table_add' %}"><i data-lucide="plus" class="icon-sm"></i>Add table</a>
+{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <div class="stack">
+    {% for area in areas %}
+    <div class="card">
+      <div class="card-head">
+        <h3>{{ area.name }}</h3>{% if area.kind == "room" %}<span class="pill"><i data-lucide="bed-double" class="icon-sm"></i>Rooms</span>{% endif %}
+        <a class="right btn btn-ghost btn-xs" href="{% url 'restaurant:area_edit' area.pk %}">Edit area</a>
+      </div>
+      <div class="card-body">
+        <div class="table-grid">
+          {% for t in area.tables.all %}
+          <a class="tile {{ t.status }}" href="{% url 'restaurant:table_edit' t.pk %}" style="min-height:86px">
+            <span class="t-name">{{ t.name }}</span>
+            <span class="t-meta"><i data-lucide="users" class="icon-sm" style="vertical-align:-3px"></i> {{ t.seats }} seats · edit</span>
+          </a>
+          {% empty %}<p class="muted small">No tables in this area yet.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if loose %}
+    <div class="card">
+      <div class="card-head"><h3>Without an area</h3></div>
+      <div class="card-body"><div class="table-grid">
+        {% for t in loose %}<a class="tile {{ t.status }}" href="{% url 'restaurant:table_edit' t.pk %}" style="min-height:86px"><span class="t-name">{{ t.name }}</span><span class="t-meta">{{ t.seats }} seats</span></a>{% endfor %}
+      </div></div>
+    </div>
+    {% endif %}
+    {% if not areas and not loose %}<div class="card"><div class="empty"><div class="em-ico"><i data-lucide="layout-grid"></i></div><b>No tables yet</b>Add an area, then add tables in bulk.</div></div>{% endif %}
+  </div>
+  <form method="post" action="{% url 'restaurant:tables_bulk_add' %}" class="card">
+    {% csrf_token %}
+    <div class="card-head"><h3>Add tables in bulk</h3></div>
+    <div class="card-body stack" style="gap:12px">
+      <div class="field"><label>Area</label><select name="area"><option value="">No area</option>{% for a in areas %}<option value="{{ a.pk }}">{{ a.name }}</option>{% endfor %}</select></div>
+      <div class="form-grid" style="gap:12px">
+        <div class="field"><label>Name prefix</label><input type="text" name="prefix" value="T" maxlength="10"></div>
+        <div class="field"><label>How many</label><input type="number" name="count" value="6" min="1" max="50"></div>
+        <div class="field"><label>Seats each</label><input type="number" name="seats" value="4" min="1"></div>
+      </div>
+      <p class="muted small mb-0">Creates T1, T2, T3… skipping names that already exist. Use prefix “R” for hotel rooms.</p>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary btn-block">Add tables</button></div>
+  </form>
+</div>
+{% endblock %}

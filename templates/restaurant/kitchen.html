@@ -1,0 +1,55 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Kitchen display{% endblock %}
+{% block heading %}Kitchen display{% endblock %}
+{% block subheading %}Tap a ticket to move it forward · New → Preparing → Ready → Picked up{% endblock %}
+{% block top_actions %}<button class="btn btn-outline btn-sm" id="soundBtn" type="button"><i data-lucide="volume-2" class="icon-sm"></i><span>Sound on</span></button>{% endblock %}
+{% block content %}
+<div class="row wrap between mb-3">
+  <div class="tabs">
+    <a class="tab{% if not status %} active{% endif %}" href="?station={{ station|urlencode }}">All</a>
+    <a class="tab{% if status == 'new' %} active{% endif %}" href="?status=new&station={{ station|urlencode }}">New <span class="n">{{ counts.new }}</span></a>
+    <a class="tab{% if status == 'preparing' %} active{% endif %}" href="?status=preparing&station={{ station|urlencode }}">Preparing <span class="n" style="background:var(--violet)">{{ counts.preparing }}</span></a>
+    <a class="tab{% if status == 'ready' %} active{% endif %}" href="?status=ready&station={{ station|urlencode }}">Ready <span class="n" style="background:var(--green)">{{ counts.ready }}</span></a>
+  </div>
+  {% if stations %}
+  <div class="chips">
+    <a class="chip{% if not station %} active{% endif %}" href="?status={{ status }}">All stations</a>
+    {% for s in stations %}<a class="chip{% if station == s %} active{% endif %}" href="?status={{ status }}&station={{ s|urlencode }}">{{ s }}</a>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+<div id="kdsGrid">{% include "restaurant/partials/kitchen_grid.html" %}</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var sound = true;
+  try { sound = localStorage.getItem("fx-kds-sound") !== "off"; } catch (e) {}
+  var btn = document.getElementById("soundBtn");
+  function label() { btn.querySelector("span").textContent = sound ? "Sound on" : "Sound off"; }
+  label();
+  btn.addEventListener("click", function () { sound = !sound; try { localStorage.setItem("fx-kds-sound", sound ? "on" : "off"); } catch (e) {} label(); if (sound) FX.beep(); });
+  function newCount() { var g = document.querySelector("[data-new-count]"); return g ? Number(g.getAttribute("data-new-count")) : 0; }
+  var last = newCount();
+  FX.poll("{% url 'restaurant:kitchen' %}?partial=1&status={{ status }}&station={{ station|urlencode }}", "#kdsGrid", 8000, function () {
+    var n = newCount(); if (n > last && sound) FX.beep(); last = n;
+  });
+  // Advance tickets without a full page reload
+  document.getElementById("kdsGrid").addEventListener("submit", function (e) {
+    var f = e.target; if (!f.matches("[data-kot-form]")) return;
+    e.preventDefault();
+    var card = f.closest(".kot"); if (card) card.style.opacity = .5;
+    fetch(f.action, { method: "POST", body: new FormData(f), headers: { "x-requested-with": "fetch" }, credentials: "same-origin" })
+      .then(function () { return fetch("{% url 'restaurant:kitchen' %}?partial=1&status={{ status }}&station={{ station|urlencode }}", { credentials: "same-origin" }); })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { document.getElementById("kdsGrid").innerHTML = html; FX.icons(); last = newCount(); })
+      .catch(function () { f.submit(); });
+  });
+  document.getElementById("kdsGrid").addEventListener("click", function (e) {
+    if (e.target.closest("button, a, form")) return;
+    var card = e.target.closest(".kot"); if (!card) return;
+    var form = card.querySelector("[data-kot-form]"); if (form) form.requestSubmit();
+  });
+})();
+</script>
+{% endblock %}

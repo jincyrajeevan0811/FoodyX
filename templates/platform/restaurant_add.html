@@ -1,0 +1,42 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Onboard restaurant{% endblock %}
+{% block heading %}Onboard a restaurant{% endblock %}
+{% block subheading %}Create the restaurant, its owner login and its subscription in one step{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:920px" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-red" style="margin:20px 24px 0">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  <div class="form-section">
+    <h4><i data-lucide="store" class="icon-sm"></i>Restaurant</h4>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.name %}
+      {% include "partials/field.html" with field=form.business_type %}
+      {% include "partials/field.html" with field=form.city %}
+    </div>
+  </div>
+  <div class="form-section">
+    <h4><i data-lucide="user-round" class="icon-sm"></i>Owner login</h4>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.owner_name %}
+      {% include "partials/field.html" with field=form.phone %}
+      {% include "partials/field.html" with field=form.email %}
+      {% include "partials/field.html" with field=form.password %}
+    </div>
+  </div>
+  <div class="form-section">
+    <h4><i data-lucide="badge-indian-rupee" class="icon-sm"></i>Plan & access</h4>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.plan %}
+      {% include "partials/field.html" with field=form.start_as %}
+      {% include "partials/field.html" with field=form.billing_cycle %}
+      {% include "partials/field.html" with field=form.trial_days %}
+      {% include "partials/field.html" with field=form.access_granted %}
+      {% include "partials/field.html" with field=form.send_welcome %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'saas:restaurants' %}">Cancel</a>
+    <button class="btn btn-primary"><i data-lucide="rocket" class="icon-sm"></i>Onboard restaurant</button>
+  </div>
+</form>
+{% endblock %}

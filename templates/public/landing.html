@@ -1,0 +1,211 @@
+{% extends "public/base_site.html" %}
+{% load foodyx_tags %}
+{% block site_content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><b>NEW</b> QR ordering · Kitchen display · Own delivery fleet</span>
+        <h1>Serve faster.<br><span class="grad">Earn more.</span><br>Stress less.</h1>
+        <p class="lead">{{ site_name }} runs your whole restaurant from one screen — lightning-fast billing, KOTs, live tables, QR and online orders, delivery riders, inventory and reports that tell you what to do next.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="{% url 'core:signup' %}">Start 14-day free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
+          {% if demo_restaurant %}<a class="btn btn-outline btn-lg" href="{% url 'storefront:store' demo_restaurant.slug %}"><i data-lucide="play-circle" class="icon-sm"></i>See a live store</a>{% else %}<a class="btn btn-outline btn-lg" href="#features"><i data-lucide="play-circle" class="icon-sm"></i>Explore features</a>{% endif %}
+        </div>
+        <div class="hero-note">
+          <span><i data-lucide="check-circle-2"></i>No card needed</span>
+          <span><i data-lucide="check-circle-2"></i>Set up in 10 minutes</span>
+          <span><i data-lucide="check-circle-2"></i>0% commission</span>
+        </div>
+      </div>
+      <div class="mock">
+        <div class="mock-window">
+          <div class="mock-bar"><i></i><i></i><i></i><span>foodyx · Dashboard</span></div>
+          <div class="mock-body">
+            <div class="mock-stats">
+              <div class="mock-stat"><small>TODAY'S SALES</small><b>₹48,320</b></div>
+              <div class="mock-stat"><small>ORDERS</small><b>126</b></div>
+              <div class="mock-stat"><small>AVG. ORDER</small><b>₹384</b></div>
+            </div>
+            <div class="mock-tables">
+              <div class="mt-o">T1<br>₹1,240</div><div class="mt-f">T2<br>Free</div><div class="mt-b">T3<br>Billed</div><div class="mt-o">T4<br>₹860</div><div class="mt-f">T5<br>Free</div>
+              <div class="mt-f">T6<br>Free</div><div class="mt-o">T7<br>₹2,110</div><div class="mt-o">T8<br>₹430</div><div class="mt-b">T9<br>Billed</div><div class="mt-f">T10<br>Free</div>
+            </div>
+            <div class="mock-stat" style="display:flex;align-items:center;gap:10px">
+              <span style="width:34px;height:34px;border-radius:10px;background:#ecfdf5;color:#059669;display:grid;place-items:center"><i data-lucide="sparkles" class="icon-sm"></i></span>
+              <div><small>SMART INSIGHT</small><b style="font-size:13px">Peak at 8 PM — add one more captain on Fridays.</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="float-card fc-1"><span class="fc-ico" style="background:#ecfdf5;color:#059669"><i data-lucide="badge-check"></i></span><div><b>UPI payment received</b><small>₹1,240 · Table T1</small></div></div>
+        <div class="float-card fc-2"><span class="fc-ico" style="background:#f2fbe1;color:#65a30d"><i data-lucide="bike"></i></span><div><b>Rider 2 min away</b><small>Order #1711-042 · OTP 4821</small></div></div>
+        <div class="float-card fc-3"><span class="fc-ico" style="background:#f1ebfe;color:#7c3aed"><i data-lucide="qr-code"></i></span><div><b>New QR order · T7</b><small>2 × Chicken Biriyani</small></div></div>
+      </div>
+    </div>
+    <div class="stats-band">
+      <div><b>&lt;3 sec</b><span>to bill a table</span></div>
+      <div><b>18</b><span>modules in one app</span></div>
+      <div><b>8 roles</b><span>with their own access</span></div>
+      <div><b>0%</b><span>commission on orders</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    {% for i in "12" %}
+    <span><i data-lucide="utensils"></i>Restaurants</span><span><i data-lucide="coffee"></i>Cafés</span><span><i data-lucide="cooking-pot"></i>Cloud kitchens</span><span><i data-lucide="hotel"></i>Hotels</span><span><i data-lucide="wine"></i>Bars & lounges</span><span><i data-lucide="croissant"></i>Bakeries</span><span><i data-lucide="store"></i>QSR chains</span><span><i data-lucide="indian-rupee"></i>Razorpay UPI</span><span><i data-lucide="printer"></i>Thermal printers</span><span><i data-lucide="monitor"></i>Kitchen displays</span><span><i data-lucide="qr-code"></i>QR menus</span>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="s-title">
+      <span class="s-kicker">Everything in one place</span>
+      <h2>Every tool your restaurant needs — beautifully simple.</h2>
+      <p>From the first KOT of the morning to the closing cash count, {{ site_name }} keeps every person on the same page.</p>
+    </div>
+    <div class="feature-grid">
+      {% for icon, title, text in features %}
+      <div class="feature"><div class="f-ico"><i data-lucide="{{ icon }}"></i></div><h3>{{ title }}</h3><p>{{ text }}</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- FLOW -->
+<section class="section section-dark" id="flow">
+  <div class="container">
+    <div class="s-title">
+      <span class="s-kicker">One order, every screen</span>
+      <h2>From scan to settle in seconds.</h2>
+      <p>Each person sees exactly what they need, the moment they need it.</p>
+    </div>
+    <div class="grid g-4">
+      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="scan-line"></i></div><h3 class="mt-2" style="font-size:17px">Guest scans & orders</h3><p style="color:#a6d1c1;margin:8px 0 0">QR menu with photos, veg marks and a cart — or call a waiter with one tap.</p></div>
+      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="user-check"></i></div><h3 class="mt-2" style="font-size:17px">Captain accepts</h3><p style="color:#a6d1c1;margin:8px 0 0">Tables lock to the captain serving them, so nothing is ever entered twice.</p></div>
+      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="chef-hat"></i></div><h3 class="mt-2" style="font-size:17px">Kitchen cooks</h3><p style="color:#a6d1c1;margin:8px 0 0">Tickets chime on the kitchen display with timers that turn red when late.</p></div>
+      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="wallet"></i></div><h3 class="mt-2" style="font-size:17px">Cashier settles</h3><p style="color:#a6d1c1;margin:8px 0 0">Cash, UPI or card — or split across all three. The table frees itself.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DELIVERY -->
+<section class="section" id="delivery">
+  <div class="container split">
+    <div>
+      <span class="s-kicker">Home delivery</span>
+      <h2 style="font-size:clamp(28px,3.4vw,42px);font-weight:800;letter-spacing:-.035em">Your own delivery fleet — without the commission.</h2>
+      <p class="muted mt-2" style="font-size:16px">Take orders on your own online store, assign riders in one tap and confirm every drop with a customer OTP.</p>
+      <ul class="tick-list">
+        <li><span class="tk"><i data-lucide="map-pin" class="icon-sm"></i></span>Delivery radius, fee and minimum order you control</li>
+        <li><span class="tk"><i data-lucide="zap" class="icon-sm"></i></span>Auto-assign the nearest free rider</li>
+        <li><span class="tk"><i data-lucide="key-round" class="icon-sm"></i></span>OTP proof of delivery and cash-on-delivery collection</li>
+        <li><span class="tk"><i data-lucide="calculator" class="icon-sm"></i></span>Rider cash-in-hand totals for end-of-day settlement</li>
+        <li><span class="tk"><i data-lucide="smartphone" class="icon-sm"></i></span>Live order tracking page for your customer</li>
+      </ul>
+    </div>
+    <div class="card card-pad" style="border-radius:24px;box-shadow:0 40px 80px -40px rgba(6,40,32,.35)">
+      <div class="row"><b>Order #1711-031</b><span class="badge badge-blue right">Out for delivery</span></div>
+      <div class="route" style="background:linear-gradient(135deg,#f3fbf7,#eef6ff)">
+        <svg viewBox="0 0 400 210" preserveAspectRatio="none"><path d="M30 170 C 110 160, 120 70, 200 90 S 310 40, 370 40" fill="none" stroke="#10b981" stroke-width="4" stroke-dasharray="8 8"/><circle cx="30" cy="170" r="9" fill="#059669"/><circle cx="210" cy="88" r="11" fill="#a3e635" stroke="#052620" stroke-width="3"/><circle cx="370" cy="40" r="9" fill="#f59e0b"/></svg>
+      </div>
+      <div class="row mt-2"><span class="avatar">AK</span><div><b>Arjun · Rider</b><div class="muted small">2.1 km away · arriving in 6 min</div></div><span class="pill right">OTP 4821</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- HARDWARE -->
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="s-title"><span class="s-kicker">Plug & play</span><h2>Works with the hardware you already own.</h2></div>
+    <div class="hw-grid">
+      <div class="hw"><span class="f-ico"><i data-lucide="printer"></i></span>Thermal bill printers</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="ticket"></i></span>KOT printers</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="monitor"></i></span>Kitchen displays</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="archive"></i></span>Cash drawers</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="scan-barcode"></i></span>Barcode scanners</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="scale"></i></span>Weighing scales</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="credit-card"></i></span>Card & UPI terminals</div>
+      <div class="hw"><span class="f-ico"><i data-lucide="tablet-smartphone"></i></span>Tablets & phones</div>
+    </div>
+  </div>
+</section>
+
+<!-- STEPS -->
+<section class="section" style="background:linear-gradient(180deg,#f6faf8,#fff)">
+  <div class="container">
+    <div class="s-title"><span class="s-kicker">Get started</span><h2>Up and running in three steps.</h2></div>
+    <div class="steps">{% for title, text in steps %}<div class="step"><h3>{{ title }}</h3><p>{{ text }}</p></div>{% endfor %}</div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="s-title"><span class="s-kicker">Simple pricing</span><h2>Plans that grow with your business.</h2><p>Every plan starts with a free trial. Prices are per outlet, plus GST.</p></div>
+    <div class="center"><div class="billing-toggle" id="cycleToggle"><button type="button" class="active" data-cycle="monthly">Monthly</button><button type="button" data-cycle="yearly">Yearly <em>2 months free</em></button></div></div>
+    <div class="price-grid">
+      {% for p in plans %}
+      <div class="price{% if p.is_popular %} popular{% endif %}">
+        {% if p.is_popular %}<span class="p-badge">Most popular</span>{% endif %}
+        <h3>{{ p.name }}</h3>
+        <div class="p-tag">{{ p.tagline }}</div>
+        {% if p.is_custom_pricing %}
+          <div class="p-amt">Let's talk</div><div class="muted small">for chains & franchises</div>
+        {% else %}
+          <div class="p-amt" data-monthly="{{ p.price_monthly|inr }}" data-yearly="{{ p.price_yearly|inr }}">{{ p.price_monthly|inr }}<small data-unit> /month</small></div>
+          <div class="muted small">+ GST · {{ p.trial_days }}-day free trial</div>
+        {% endif %}
+        <ul>
+          {% for h in p.highlight_list %}<li><i data-lucide="check-circle-2"></i>{{ h }}</li>{% empty %}{% for f in p.feature_labels %}<li><i data-lucide="check-circle-2"></i>{{ f }}</li>{% endfor %}{% endfor %}
+        </ul>
+        {% if p.is_custom_pricing %}
+          <a class="btn btn-outline btn-block" href="mailto:{{ platform.sales_email|default:platform.support_email }}">Contact sales</a>
+        {% else %}
+          <a class="btn {% if p.is_popular %}btn-lime{% else %}btn-outline{% endif %} btn-block" href="{% url 'core:signup' %}?plan={{ p.slug }}">Start free trial</a>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="center muted">Plans are being prepared — check back soon.</p>
+      {% endfor %}
+    </div>
+    <p class="center muted small mt-3"><i data-lucide="shield-check" class="icon-sm" style="vertical-align:-3px"></i> Secure payments via Razorpay — UPI, cards and netbanking.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="padding-top:20px">
+  <div class="container">
+    <div class="s-title"><span class="s-kicker">FAQ</span><h2>Questions, answered.</h2></div>
+    <div class="faq">{% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}</div>
+  </div>
+</section>
+
+<section class="container">
+  <div class="cta-band">
+    <h2>Ready to serve more guests with less effort?</h2>
+    <p>Join restaurants, cafés and cloud kitchens running on {{ site_name }}.</p>
+    <a class="btn btn-lime btn-lg" href="{% url 'core:signup' %}">Start your free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var t = document.getElementById("cycleToggle"); if (!t) return;
+  t.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    var cycle = b.getAttribute("data-cycle");
+    t.querySelectorAll("button").forEach(function (x) { x.classList.toggle("active", x === b); });
+    document.querySelectorAll("[data-monthly]").forEach(function (el) {
+      el.firstChild.textContent = cycle === "yearly" ? el.getAttribute("data-yearly") : el.getAttribute("data-monthly");
+      el.querySelector("[data-unit]").textContent = cycle === "yearly" ? " /year" : " /month";
+    });
+  });
+})();
+</script>
+{% endblock %}

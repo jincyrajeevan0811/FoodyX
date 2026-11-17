@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load foodyx_tags %}
+{% block title %}{% if r.seo_title %}{{ r.seo_title }}{% else %}{{ r.name }} — {% if mode == "table" %}Menu · {{ table.name }}{% else %}Order online{% endif %}{% endif %}{% endblock %}
+{% block meta_description %}{% if r.seo_description %}{{ r.seo_description }}{% else %}Order from {{ r.name }}{% if r.city %} in {{ r.city }}{% endif %}. Browse the menu and order online.{% endif %}{% endblock %}
+{% block body_class %}store{% endblock %}
+{% block body %}
+<header class="store-hero" {% if r.cover_url %}style="background-image:linear-gradient(150deg,rgba(5,38,32,.92),rgba(8,116,85,.85)),url('{{ r.cover_url }}');background-size:cover;background-position:center"{% endif %}>
+  <div class="container">
+    <div class="row">
+      {% if r.logo_url %}<img src="{{ r.logo_url }}" alt="" style="width:52px;height:52px;border-radius:14px;object-fit:cover;background:#fff">{% else %}<span class="brand-mark" style="width:52px;height:52px;border-radius:14px;font-size:22px">{{ r.name|slice:":1"|upper }}</span>{% endif %}
+      <div>
+        <h1>{{ r.name }}</h1>
+        <p>{% if r.tagline %}{{ r.tagline }}{% else %}{{ r.get_business_type_display }}{% if r.city %} · {{ r.city }}{% endif %}{% endif %}</p>
+      </div>
+      <button class="icon-btn right" data-theme-toggle aria-label="Dark mode" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff"><i data-lucide="moon"></i></button>
+    </div>
+    <div class="store-pills">
+      {% if mode == "table" %}<span><i data-lucide="armchair" class="icon-sm"></i>{{ table.name }}</span>{% endif %}
+      {% if r.opening_hours %}<span><i data-lucide="clock" class="icon-sm"></i>{{ r.opening_hours }}</span>{% endif %}
+      {% if mode == "store" and delivery_ok %}<span><i data-lucide="bike" class="icon-sm"></i>Delivery{% if r.delivery_fee %} {{ r.delivery_fee|inr }}{% else %} free{% endif %}</span>{% endif %}
+      {% if mode == "store" %}<span><i data-lucide="shopping-bag" class="icon-sm"></i>Takeaway</span>{% endif %}
+      {% if r.phone %}<span><i data-lucide="phone" class="icon-sm"></i><a href="tel:{{ r.phone }}" style="color:inherit">{{ r.phone }}</a></span>{% endif %}
+    </div>
+  </div>
+</header>
+
+<div class="store-sticky">
+  <div class="container">
+    <div class="store-search">
+      <div class="input-icon" style="flex:1"><i data-lucide="search"></i><input type="search" id="q" placeholder="Search dishes"></div>
+      <label class="check small nowrap" style="padding-right:8px"><input type="checkbox" id="vegOnly"> Veg only</label>
+    </div>
+    <div class="chips mt-2" id="cats"></div>
+  </div>
+</div>
+
+<main class="container">
+  {% if not can_order %}
+  <div class="alert alert-amber mt-2"><i data-lucide="info" class="icon-sm"></i><div>{% if mode == "table" %}Ordering from the table is off right now — browse the menu and tell our staff what you'd like.{% else %}Online ordering is closed right now. You can still browse the menu.{% endif %}</div></div>
+  {% endif %}
+  {% if my_orders %}
+  <div class="card card-pad mt-2" style="padding:14px 16px">
+    <div class="small strong mb-2">Your recent orders</div>
+    {% for o in my_orders %}<a class="row small" style="padding:5px 0;color:inherit" href="{% url 'storefront:track' o.public_id %}"><span>#{{ o.number }}</span>{% badge o.status o.get_status_display %}<span class="right card-link">Track →</span></a>{% endfor %}
+  </div>
+  {% endif %}
+  {% if mode == "table" and can_order %}
+  <form method="post" action="{% url 'storefront:call_waiter' table.qr_token %}" class="mt-2" id="callForm">{% csrf_token %}
+    <button class="btn btn-outline btn-block"><i data-lucide="hand" class="icon-sm"></i>Call a waiter</button>
+  </form>
+  {% endif %}
+  <div id="menu"></div>
+  <div class="empty hide" id="noResults"><div class="em-ico"><i data-lucide="search-x"></i></div><b>No dishes found</b></div>
+</main>
+
+{% if can_order %}
+<div class="cart-bar hide" id="cartBar">
+  <div><b id="cartCount">0 items</b><small id="cartTotal">₹0</small></div>
+  <button class="btn btn-lime right" data-open="checkout">View cart <i data-lucide="arrow-right" class="icon-sm"></i></button>
+</div>
+
+<dialog class="modal" id="checkout">
+  <form method="post" action="{{ post_url }}" id="checkoutForm">
+    {% csrf_token %}
+    <input type="hidden" name="cart" id="cartInput">
+    <div class="modal-head"><h3>Your order</h3><button class="icon-btn x" type="button" data-close><i data-lucide="x"></i></button></div>
+    <div class="modal-body">
+      <div id="sheetLines"></div>
+      <div class="row mt-2"><b>Item total</b><b class="right num" id="sheetTotal">₹0</b></div>
+      {% if mode == "store" %}
+        <div class="tabs mt-3 w-100" style="width:100%">
+          <label class="tab active" style="flex:1;justify-content:center"><input type="radio" name="order_type" value="takeaway" checked hidden> <i data-lucide="shopping-bag" class="icon-sm"></i>Takeaway</label>
+          {% if delivery_ok %}<label class="tab" style="flex:1;justify-content:center"><input type="radio" name="order_type" value="delivery" hidden> <i data-lucide="bike" class="icon-sm"></i>Delivery</label>{% endif %}
+        </div>
+        <div class="form-grid mt-3" style="gap:10px">
+          <input type="text" name="name" placeholder="Your name" required>
+          <input type="tel" name="phone" placeholder="Mobile number" required pattern="[0-9+ ]{10,15}">
+          <textarea name="address" class="full hide" id="addr" rows="2" placeholder="Delivery address with landmark"></textarea>
+          <input type="text" name="coupon" placeholder="Coupon code (optional)" class="full" style="text-transform:uppercase">
+          <input type="text" name="note" placeholder="Note for the kitchen (optional)" class="full">
+        </div>
+        {% if delivery_ok and r.delivery_fee %}<p class="muted small mt-1 hide" id="feeNote">Delivery fee {{ r.delivery_fee|inr }} is added to the bill.</p>{% endif %}
+        {% if r.min_order_amount %}<p class="muted small mt-1">Minimum order {{ r.min_order_amount|inr }}.</p>{% endif %}
+        <div class="label mt-3">Payment</div>
+        <div class="stack mt-1" style="gap:8px">
+          {% if pay_online %}<label class="check"><input type="radio" name="payment" value="online" checked> Pay online now (UPI, card)</label>{% endif %}
+          <label class="check"><input type="radio" name="payment" value="counter" {% if not pay_online %}checked{% endif %}> Pay at pickup</label>
+          {% if delivery_ok and r.accept_cash_on_delivery %}<label class="check hide" id="codOpt"><input type="radio" name="payment" value="cod"> Cash on delivery</label>{% endif %}
+        </div>
+      {% else %}
+        <div class="form-grid mt-3" style="gap:10px">
+          <input type="text" name="name" placeholder="Your name (optional)">
+          <input type="tel" name="phone" placeholder="Mobile (optional)">
+          <input type="text" name="note" placeholder="Note for the kitchen (optional)" class="full">
+        </div>
+        <p class="muted small mt-2">Your order goes to {{ table.name }}. You'll pay at the table when you're done.</p>
+      {% endif %}
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary btn-lg btn-block" id="placeBtn">Place order · <span id="placeTotal">₹0</span></button></div>
+  </form>
+</dialog>
+{% endif %}
+{{ menu|json_script:"menu-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("menu-data").textContent);
+  var canOrder = {% if can_order %}true{% else %}false{% endif %};
+  var key = "fx-cart-{{ r.pk }}-{% if table %}{{ table.pk }}{% else %}store{% endif %}";
+  var cart = {};
+  try { cart = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { cart = {}; }
+  var byId = {}; data.items.forEach(function (m) { byId[m.id] = m; });
+  Object.keys(cart).forEach(function (id) { if (!byId[id]) delete cart[id]; });
+  var activeCat = "";
+
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+  function save() { try { localStorage.setItem(key, JSON.stringify(cart)); } catch (e) {} }
+  function dot(t) { return '<span class="food-dot ' + (t === "non_veg" ? "nonveg" : t) + '"></span>'; }
+
+  var catBox = document.getElementById("cats");
+  var catsWithItems = data.categories.filter(function (c) { return data.items.some(function (m) { return m.cat === c.id; }); });
+  catBox.innerHTML = '<button class="chip active" data-cat="">All</button>' + catsWithItems.map(function (c) { return '<button class="chip" data-cat="' + c.id + '">' + esc(c.name) + "</button>"; }).join("");
+  catBox.addEventListener("click", function (e) {
+    var b = e.target.closest(".chip"); if (!b) return;
+    catBox.querySelectorAll(".chip").forEach(function (x) { x.classList.remove("active"); }); b.classList.add("active");
+    activeCat = b.getAttribute("data-cat"); render();
+    if (activeCat) { var t = document.getElementById("cat-" + activeCat); if (t) t.scrollIntoView({ behavior: "smooth" }); }
+  });
+
+  function addBtn(m) {
+    if (!canOrder) return "";
+    var q = cart[m.id] || 0;
+    if (!q) return '<button class="btn btn-soft btn-sm add" data-add="' + m.id + '">Add <i data-lucide="plus" class="icon-sm"></i></button>';
+    return '<div class="qty-ctrl add"><button data-dec="' + m.id + '">−</button><span>' + q + '</span><button data-add="' + m.id + '">+</button></div>';
+  }
+  function render() {
+    var q = (document.getElementById("q").value || "").toLowerCase().trim();
+    var veg = document.getElementById("vegOnly").checked;
+    var groups = [];
+    var featured = data.items.filter(function (m) { return m.featured; });
+    var cats = [{ id: "fx-featured", name: "★ Chef's specials" }].concat(catsWithItems).concat([{ id: null, name: "More" }]);
+    var html = "", shown = 0;
+    cats.forEach(function (c) {
+      if (activeCat && String(c.id) !== activeCat) return;
+      var items = c.id === "fx-featured" ? featured : data.items.filter(function (m) { return c.id === null ? !m.cat || !catsWithItems.some(function (x) { return x.id === m.cat; }) : m.cat === c.id; });
+      if (c.id === "fx-featured" && (q || activeCat)) return;
+      items = items.filter(function (m) { return (!q || m.name.toLowerCase().indexOf(q) >= 0 || (m.desc || "").toLowerCase().indexOf(q) >= 0) && (!veg || m.type === "veg"); });
+      if (!items.length) return;
+      shown += items.length;
+      html += '<h2 class="cat-title" id="cat-' + c.id + '">' + esc(c.name) + "</h2>";
+      items.forEach(function (m) {
+        html += '<div class="dish">' + (m.img ? '<img class="dish-img" src="' + esc(m.img) + '" alt="" loading="lazy">' : '<div class="dish-img"><i data-lucide="utensils" class="icon-lg"></i></div>') +
+          '<div style="flex:1;min-width:0;display:flex;flex-direction:column"><h4>' + dot(m.type) + esc(m.name) + "</h4>" + (m.desc ? "<p>" + esc(m.desc) + "</p>" : "") +
+          '<div class="row" style="margin-top:auto"><span class="price-tag">' + FX.money(m.price) + "</span>" + addBtn(m) + "</div></div></div>";
+      });
+    });
+    document.getElementById("menu").innerHTML = html;
+    document.getElementById("noResults").classList.toggle("hide", shown > 0);
+    FX.icons(); renderCart();
+  }
+  function total() { return Object.keys(cart).reduce(function (s, id) { return s + byId[id].price * cart[id]; }, 0); }
+  function count() { return Object.keys(cart).reduce(function (s, id) { return s + cart[id]; }, 0); }
+  function renderCart() {
+    if (!canOrder) return;
+    var n = count();
+    document.getElementById("cartBar").classList.toggle("hide", n === 0);
+    document.getElementById("cartCount").textContent = n + " item" + (n === 1 ? "" : "s");
+    document.getElementById("cartTotal").textContent = FX.money(total()) + " + taxes if any";
+    document.getElementById("sheetLines").innerHTML = Object.keys(cart).map(function (id) {
+      var m = byId[id];
+      return '<div class="sheet-line">' + dot(m.type) + '<span style="flex:1"><b>' + esc(m.name) + '</b><br><span class="muted small">' + FX.money(m.price) + '</span></span><div class="qty-ctrl"><button type="button" data-dec="' + id + '">−</button><span>' + cart[id] + '</span><button type="button" data-add="' + id + '">+</button></div></div>';
+    }).join("") || '<p class="muted">Your cart is empty.</p>';
+    document.getElementById("sheetTotal").textContent = FX.money(total());
+    document.getElementById("placeTotal").textContent = FX.money(total());
+    document.getElementById("cartInput").value = JSON.stringify(Object.keys(cart).map(function (id) { return { id: Number(id), qty: cart[id] }; }));
+    document.getElementById("placeBtn").disabled = n === 0;
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-add]"), d = e.target.closest("[data-dec]");
+    if (a) { e.preventDefault(); var id = a.getAttribute("data-add"); cart[id] = (cart[id] || 0) + 1; save(); render(); }
+    if (d) { e.preventDefault(); var id2 = d.getAttribute("data-dec"); cart[id2] = (cart[id2] || 0) - 1; if (cart[id2] <= 0) delete cart[id2]; save(); render(); }
+  });
+  document.getElementById("q").addEventListener("input", render);
+  document.getElementById("vegOnly").addEventListener("change", render);
+
+  var form = document.getElementById("checkoutForm");
+  if (form) {
+    form.addEventListener("submit", function () { try { localStorage.removeItem(key); } catch (e) {} document.getElementById("placeBtn").disabled = true; });
+    form.querySelectorAll("input[name=order_type]").forEach(function (r) {
+      r.addEventListener("change", function () {
+        form.querySelectorAll("input[name=order_type]").forEach(function (x) { x.closest(".tab").classList.toggle("active", x.checked); });
+        var del = r.value === "delivery" && r.checked;
+        var addr = document.getElementById("addr"); addr.classList.toggle("hide", !del); addr.required = del;
+        var cod = document.getElementById("codOpt");
+        if (cod) {
+          cod.classList.toggle("hide", !del);
+          var codInput = cod.querySelector("input");
+          if (del && !form.querySelector("input[name=payment][value=online]")) codInput.checked = true;
+          if (!del && codInput.checked) { var counter = form.querySelector("input[name=payment][value=counter]"); if (counter) counter.checked = true; }
+        }
+        var fee = document.getElementById("feeNote"); if (fee) fee.classList.toggle("hide", !del);
+      });
+    });
+  }
+  var call = document.getElementById("callForm");
+  if (call) call.addEventListener("submit", function (e) {
+    e.preventDefault();
+    fetch(call.action, { method: "POST", body: new FormData(call), headers: { "x-requested-with": "fetch" }, credentials: "same-origin" })
+      .then(function () { call.querySelector("button").innerHTML = "✓ A waiter is on the way"; call.querySelector("button").disabled = true; });
+  });
+  render();
+})();
+</script>
+{% endblock %}

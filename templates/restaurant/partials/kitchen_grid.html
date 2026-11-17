@@ -1,0 +1,35 @@
+{% load foodyx_tags %}
+<div data-new-count="{{ counts.new }}"></div>
+{% if tickets %}
+<div class="kds-grid">
+  {% for t in tickets %}
+  <div class="kot {{ t.status }}">
+    <div class="kot-head">
+      <b>{{ t.order.place_label }}</b>
+      <span class="small" style="opacity:.85">#{{ t.order.number }} · KOT {{ t.kot_no }}</span>
+      <span class="kot-timer {% if t.tone != 'ok' %}{{ t.tone }}{% endif %}">{{ t.minutes }}m</span>
+    </div>
+    <div class="kot-body">
+      {% for it in t.items %}
+      <div class="kot-item{% if it.kot_status != t.status %} done{% endif %}">
+        <span class="q">{{ it.qty }}×</span>
+        <span style="flex:1">{{ it.name }}{% if it.note %}<span class="note">⚑ {{ it.note }}</span>{% endif %}</span>
+        {% if it.station %}<span class="pill tiny">{{ it.station }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="kot-foot">
+      <span>{{ t.order.get_order_type_display }} · {{ t.by }}</span>
+      <form method="post" action="{% url 'restaurant:kitchen_advance' t.order.pk t.kot_no %}" data-kot-form class="right">
+        {% csrf_token %}<input type="hidden" name="station" value="{{ station }}">
+        <button class="btn btn-sm {% if t.status == 'ready' %}btn-primary{% else %}btn-dark{% endif %}">
+          {% if t.status == "new" %}Start cooking{% elif t.status == "preparing" %}Mark ready{% else %}Picked up{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><div class="empty"><div class="em-ico"><i data-lucide="chef-hat"></i></div><b>Kitchen is clear</b>New tickets appear here with a sound.</div></div>
+{% endif %}

@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{% if item %}Edit {{ item.name }}{% else %}Add item{% endif %}{% endblock %}
+{% block heading %}{% if item %}Edit “{{ item.name }}”{% else %}Add menu item{% endif %}{% endblock %}
+{% block subheading %}Price changes apply from the next order{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:880px">
+  {% csrf_token %}
+  <div class="card-body">{% include "partials/form_fields.html" %}</div>
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'restaurant:menu' %}">Cancel</a>
+    {% if not item %}<button class="btn btn-outline" name="add_another" value="1">Save & add another</button>{% endif %}
+    <button class="btn btn-primary">Save item</button>
+  </div>
+</form>
+{% endblock %}

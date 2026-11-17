@@ -1,0 +1,30 @@
+{% load foodyx_tags %}
+<form method="post" class="card">
+  {% csrf_token %}
+  <div class="card-head">
+    <h3>What each role can open</h3>
+    <span class="right muted small">Owner always has full access. Greyed modules are not in {{ r.name }}'s plan.</span>
+  </div>
+  <div class="table-wrap"><table class="table matrix">
+    <thead><tr><th>Module</th>{% for row in matrix %}<th title="{{ row.desc }}">{{ row.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for m in modules %}
+      <tr>
+        <td class="{% if m.locked %}locked{% endif %}"><span class="row"><i data-lucide="{{ m.icon }}" class="icon-sm"></i><b>{{ m.label }}</b>{% if m.locked %}<span class="badge badge-slate">Upgrade</span>{% endif %}</span></td>
+        {% for row in matrix %}
+        <td class="{% if m.locked %}locked{% endif %}"><input type="checkbox" name="perm_{{ row.role }}" value="{{ m.code }}" {% if row.modules|contains:m.code %}checked{% endif %} aria-label="{{ row.label }} – {{ m.label }}"></td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <div class="form-actions">
+    <button class="btn btn-ghost" name="reset" value="1" data-confirm="Reset all roles to FoodyX defaults?">Reset to defaults</button>
+    <button class="btn btn-primary"><i data-lucide="save" class="icon-sm"></i>Save permissions</button>
+  </div>
+</form>
+<div class="grid g-3 mt-3">
+  {% for row in matrix %}
+  <div class="card card-pad"><b>{{ row.label }}</b><p class="muted small mt-1 mb-0">{{ row.desc }}</p></div>
+  {% endfor %}
+</div>

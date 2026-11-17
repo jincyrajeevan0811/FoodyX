@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Bills{% endblock %}
+{% block heading %}Bills{% endblock %}
+{% block subheading %}Find, reprint or share any bill — they are kept forever{% endblock %}
+{% block content %}
+<form class="search-bar mb-3" method="get">
+  <input type="date" name="date" value="{% if day %}{{ day|date:'Y-m-d' }}{% endif %}" style="width:auto" data-autosubmit>
+  <div class="input-icon"><i data-lucide="search"></i><input type="search" name="q" value="{{ q }}" placeholder="Bill no., table, phone or name"></div>
+  <button class="btn btn-outline">Search</button>
+  <a class="btn btn-ghost right" href="?{% if day %}date={{ day|date:'Y-m-d' }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}export=1"><i data-lucide="download" class="icon-sm"></i>CSV</a>
+</form>
+<div class="grid g-3 mb-3">
+  <div class="card stat"><div class="label">Bills</div><div class="value">{{ page.paginator.count }}</div><div class="hint">{% if q %}matching “{{ q }}”{% else %}{{ day|date:"d M Y" }}{% endif %}</div></div>
+  <div class="card stat lime"><div class="label">Billed amount</div><div class="value">{{ total|inr }}</div><div class="hint">incl. tax & charges</div></div>
+  <div class="card stat violet"><div class="label">Discounts given</div><div class="value">{{ discount|inr }}</div><div class="hint">on these bills</div></div>
+</div>
+<div class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Bill</th><th>Time</th><th>Place</th><th>Guest</th><th>Payment</th><th class="text-right">Total</th><th></th></tr></thead>
+    <tbody>
+    {% for o in page %}
+      <tr>
+        <td><span class="t-title">{{ o.bill_no }}</span><div class="t-sub">#{{ o.number }}</div></td>
+        <td class="nowrap">{{ o.billed_at|date:"d M, h:i A" }}</td>
+        <td>{{ o.place_label }}</td>
+        <td>{{ o.customer_name|default:"—" }}<div class="t-sub">{{ o.customer_phone }}</div></td>
+        <td>{% badge o.payment_status o.get_payment_status_display %}</td>
+        <td class="text-right strong num">{{ o.total|inr }}</td>
+        <td class="text-right nowrap"><a class="btn btn-outline btn-xs" href="{% url 'restaurant:bill_print' o.pk %}"><i data-lucide="printer" class="icon-sm"></i>View</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7"><div class="empty"><div class="em-ico"><i data-lucide="receipt-text"></i></div><b>No bills found</b>Try another date or search.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

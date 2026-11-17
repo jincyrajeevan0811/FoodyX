@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Upgrade{% endblock %}
+{% block heading %}Unlock this feature{% endblock %}
+{% block content %}
+<div class="card hero-card card-pad center" style="max-width:620px;margin:40px auto;padding:48px 32px">
+  <div style="position:relative;z-index:1">
+    <div style="width:64px;height:64px;border-radius:20px;margin:0 auto 16px;display:grid;place-items:center;background:rgba(163,230,53,.18);color:var(--lime)"><i data-lucide="sparkles" class="icon-lg"></i></div>
+    <h2 style="font-size:26px">This module isn't in your current plan</h2>
+    <p class="muted mt-2">Upgrade to unlock it instantly — your data and settings stay exactly as they are.</p>
+    {% if allowed_modules and "billing" in allowed_modules %}
+    <a class="btn btn-lime btn-lg mt-3" href="{% url 'restaurant:billing' %}">See plans</a>
+    {% else %}<p class="small mt-3">Ask the owner to upgrade the plan.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

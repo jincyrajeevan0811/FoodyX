@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Category{% endblock %}
+{% block heading %}{% if cat %}Edit “{{ cat.name }}”{% else %}Add category{% endif %}{% endblock %}
+{% block content %}
+<form method="post" class="card" style="max-width:640px">
+  {% csrf_token %}
+  <div class="card-body">{% include "partials/form_fields.html" %}</div>
+  <div class="form-actions">
+    {% if cat %}<button class="btn btn-ghost text-red" name="delete" value="1" style="margin-right:auto" formnovalidate onclick="return confirm('Delete this category? Items stay on the menu without a category.')">Delete</button>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'restaurant:menu' %}?tab=categories">Cancel</a>
+    <button class="btn btn-primary">Save</button>
+  </div>
+</form>
+{% endblock %}

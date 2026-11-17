@@ -1,0 +1,30 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Health check{% endblock %}
+{% block heading %}Health check{% endblock %}
+{% block subheading %}System status at {% now "h:i A" %}{% endblock %}
+{% block content %}
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-head"><h3>Checks</h3></div>
+    <div class="card-body" style="padding-top:4px">
+      {% for name, ok, note in checks %}
+      <div class="check-row">
+        <span class="check-ico {% if ok %}ok{% else %}todo{% endif %}"><i data-lucide="{% if ok %}check{% else %}alert-triangle{% endif %}" class="icon-sm"></i></span>
+        <div><b>{{ name }}</b><div class="muted small">{{ note }}</div></div>
+        <span class="right">{% if ok %}<span class="badge badge-green">OK</span>{% else %}<span class="badge badge-amber">Attention</span>{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card card-pad">
+      <h3 style="font-size:15.5px" class="mb-2">Records</h3>
+      <dl class="kv">{% for k, v in counts %}<dt>{{ k }}</dt><dd class="num">{{ v }}</dd>{% endfor %}</dl>
+    </div>
+    <div class="card card-pad">
+      <h3 style="font-size:15.5px" class="mb-2">Environment</h3>
+      <dl class="kv">{% for k, v in env %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}</dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

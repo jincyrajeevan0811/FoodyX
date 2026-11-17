@@ -1,0 +1,42 @@
+{% extends "layouts/platform.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Plans & pricing{% endblock %}
+{% block heading %}Plans & pricing{% endblock %}
+{% block subheading %}Tiers restaurants can buy · prices exclude GST{% endblock %}
+{% block top_actions %}{% if can_manage %}<a class="btn btn-primary btn-sm" href="{% url 'saas:plan_add' %}"><i data-lucide="plus" class="icon-sm"></i>New plan</a>{% endif %}{% endblock %}
+{% block content %}
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">
+  {% for p in plans %}
+  <div class="card card-pad{% if p.is_popular %} hero-card{% endif %}" style="display:flex;flex-direction:column">
+    <div class="row">
+      <h3 style="font-size:18px">{{ p.name }}</h3>
+      {% if p.is_popular %}<span class="badge badge-green right" style="background:var(--lime);color:#052620">Most popular</span>{% endif %}
+      {% if not p.is_active %}<span class="badge badge-red right">Inactive</span>{% elif not p.is_public %}<span class="badge badge-slate right">Hidden</span>{% endif %}
+    </div>
+    <p class="muted small mt-1">{{ p.tagline|default:"—" }}</p>
+    {% if p.is_custom_pricing %}
+      <div style="font-size:30px;font-weight:800;letter-spacing:-.03em">Custom</div>
+    {% else %}
+      <div style="font-size:30px;font-weight:800;letter-spacing:-.03em" class="num">{{ p.price_monthly|inr }}<small class="muted" style="font-size:13px;font-weight:600"> /month</small></div>
+      <div class="muted small">{{ p.price_yearly|inr }} /year</div>
+    {% endif %}
+    <div class="row wrap mt-2">
+      <span class="pill"><i data-lucide="users" class="icon-sm"></i>{% if p.max_staff %}{{ p.max_staff }}{% else %}Unlimited{% endif %} staff</span>
+      <span class="pill"><i data-lucide="layout-grid" class="icon-sm"></i>{% if p.max_tables %}{{ p.max_tables }}{% else %}Unlimited{% endif %} tables</span>
+      <span class="pill"><i data-lucide="printer" class="icon-sm"></i>{% if p.max_devices %}{{ p.max_devices }}{% else %}Unlimited{% endif %} devices</span>
+    </div>
+    <ul class="small mt-2" style="padding-left:18px;margin-bottom:14px">
+      {% for f in p.feature_labels %}<li>{{ f }}</li>{% empty %}<li class="muted">Core POS features only</li>{% endfor %}
+    </ul>
+    <div class="row mt-2" style="margin-top:auto">
+      <span class="muted small">{{ p.sub_count }} subscriber{{ p.sub_count|pluralize }} · {{ p.trial_days }}-day trial</span>
+      {% if can_manage %}
+      <a class="btn btn-sm {% if p.is_popular %}btn-lime{% else %}btn-outline{% endif %} right" href="{% url 'saas:plan_edit' p.pk %}">Edit</a>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="card"><div class="empty"><div class="em-ico"><i data-lucide="badge-indian-rupee"></i></div><b>No plans yet</b>Create plans like Basic, Average and Medium for restaurants to buy.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Plan & billing{% endblock %}
+{% block heading %}Plan & billing{% endblock %}
+{% block subheading %}Prices are per outlet and exclude {{ gst_percent|floatformat:"-2" }}% GST{% endblock %}
+{% block content %}
+{% if sub %}
+<div class="card hero-card card-pad mb-3">
+  <div class="row wrap" style="position:relative;z-index:1;gap:28px">
+    <div><div class="muted small">Current plan</div><div style="font-size:26px;font-weight:800">{{ sub.plan.name }}</div></div>
+    <div><div class="muted small">Status</div><div style="font-size:18px;font-weight:700">{% if sub.is_trial and sub.is_live %}Free trial{% elif sub.is_live %}Active{% else %}Expired{% endif %}</div></div>
+    <div><div class="muted small">{% if sub.is_live %}{% if sub.is_trial %}Trial ends{% else %}Renews on{% endif %}{% else %}Ended on{% endif %}</div><div style="font-size:18px;font-weight:700">{{ sub.current_period_end|date:"d M Y" }}</div></div>
+    {% if sub.is_live %}<div class="right"><span class="pill" style="background:rgba(163,230,53,.18);color:var(--lime)">{{ sub.days_left }} day{{ sub.days_left|pluralize }} left</span></div>{% endif %}
+  </div>
+</div>
+{% if not sub.is_live %}<div class="alert alert-red mb-3"><i data-lucide="alert-octagon" class="icon-sm"></i><div>Your plan has expired. Choose a plan below to continue using {{ site_name }}. Your data is safe.</div></div>{% endif %}
+{% endif %}
+
+<div class="center mb-3">
+  <div class="billing-toggle" id="cycleToggle">
+    <button type="button" class="active" data-cycle="monthly">Monthly</button>
+    <button type="button" data-cycle="yearly">Yearly <em>2 months free</em></button>
+  </div>
+</div>
+<div class="price-grid">
+  {% for p in plans %}
+  <div class="price{% if p.is_popular %} popular{% endif %}">
+    {% if p.is_popular %}<span class="p-badge">Most popular</span>{% endif %}
+    <h3>{{ p.name }}</h3>
+    <div class="p-tag">{{ p.tagline }}</div>
+    {% if p.is_custom_pricing %}
+      <div class="p-amt">Let's talk</div><div class="muted small">custom pricing</div>
+    {% else %}
+      <div class="p-amt" data-monthly="{{ p.price_monthly|inr }}" data-yearly="{{ p.price_yearly|inr }}">{{ p.price_monthly|inr }}<small data-unit> /month</small></div>
+      <div class="muted small" data-note-yearly hidden>billed {{ p.price_yearly|inr }} yearly</div>
+    {% endif %}
+    <ul>
+      {% for h in p.highlight_list %}<li><i data-lucide="check-circle-2"></i>{{ h }}</li>{% empty %}{% for f in p.feature_labels %}<li><i data-lucide="check-circle-2"></i>{{ f }}</li>{% endfor %}{% endfor %}
+    </ul>
+    {% if can_pay %}
+      {% if sub and sub.plan_id == p.pk and sub.status == "active" and sub.is_live %}
+        <form method="post" action="{% url 'restaurant:billing_checkout' %}">{% csrf_token %}<input type="hidden" name="plan" value="{{ p.pk }}"><input type="hidden" name="cycle" value="monthly" data-cycle-input>
+          <button class="btn btn-outline btn-block">Renew early</button></form>
+      {% else %}
+        <form method="post" action="{% url 'restaurant:billing_checkout' %}">{% csrf_token %}<input type="hidden" name="plan" value="{{ p.pk }}"><input type="hidden" name="cycle" value="monthly" data-cycle-input>
+          <button class="btn {% if p.is_popular %}btn-lime{% else %}btn-primary{% endif %} btn-block">{% if p.is_custom_pricing %}Contact sales{% else %}Choose {{ p.name }}{% endif %}</button></form>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+<p class="center muted small mt-3"><i data-lucide="shield-check" class="icon-sm" style="vertical-align:-3px"></i> Paid securely with Razorpay — UPI, cards, netbanking. A GST invoice is emailed after payment.</p>
+
+<div class="card mt-4">
+  <div class="card-head"><h3>Billing history</h3></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Date</th><th>Plan</th><th>Cycle</th><th class="text-right">Total</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+      <tr><td>{{ p.created_at|date:"d M Y" }}</td><td>{{ p.plan|default:"—" }}</td><td>{{ p.billing_cycle|capfirst }}</td><td class="text-right num strong">{{ p.total|inr }}</td><td>{% badge p.status %}</td>
+      <td class="text-right">{% if p.status == "paid" %}<a class="btn btn-ghost btn-xs" href="{% url 'restaurant:billing_invoice' p.pk %}" target="_blank"><i data-lucide="file-text" class="icon-sm"></i>Invoice</a>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6" class="muted center">No payments yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("cycleToggle").addEventListener("click", function (e) {
+  var b = e.target.closest("button"); if (!b) return;
+  var cycle = b.getAttribute("data-cycle");
+  this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("active", x === b); });
+  document.querySelectorAll("[data-monthly]").forEach(function (el) {
+    el.firstChild.textContent = cycle === "yearly" ? el.getAttribute("data-yearly") : el.getAttribute("data-monthly");
+    el.querySelector("[data-unit]").textContent = cycle === "yearly" ? " /year" : " /month";
+  });
+  document.querySelectorAll("[data-cycle-input]").forEach(function (i) { i.value = cycle; });
+});
+</script>
+{% endblock %}

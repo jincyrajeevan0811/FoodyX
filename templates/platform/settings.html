@@ -1,0 +1,30 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Platform settings{% endblock %}
+{% block heading %}Platform settings{% endblock %}
+{% block subheading %}Site, payments, email, invoices and SEO{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <form method="post" class="card">
+    {% csrf_token %}
+    {% if form.errors %}<div class="alert alert-red" style="margin:20px 24px 0">Please fix the highlighted fields.</div>{% endif %}
+    {% for key, title, fields in form.sections %}
+    <div class="form-section" id="{{ key }}">
+      <h4><i data-lucide="{% if key == 'general' %}globe{% elif key == 'payments' %}credit-card{% elif key == 'email' %}mail{% elif key == 'company' %}building-2{% else %}search{% endif %}" class="icon-sm"></i>{{ title }}</h4>
+      {% if key == "payments" %}<div class="alert alert-blue mb-2"><i data-lucide="webhook" class="icon-sm"></i><div>Razorpay webhook URL: <code>{{ webhook_url }}</code> — subscribe to <b>payment.captured</b>, <b>order.paid</b> and <b>payment.failed</b>.</div></div>{% endif %}
+      <div class="form-grid">{% for field in fields %}{% include "partials/field.html" %}{% endfor %}</div>
+      {% if key == "email" %}<button class="btn btn-outline btn-sm mt-2" name="action" value="test_email" formnovalidate><i data-lucide="send" class="icon-sm"></i>Send test email to me</button>{% endif %}
+    </div>
+    {% endfor %}
+    <div class="form-actions"><button class="btn btn-primary"><i data-lucide="save" class="icon-sm"></i>Save settings</button></div>
+  </form>
+  <div class="stack">
+    <div class="card card-pad" style="position:sticky;top:82px">
+      <h3 style="font-size:15.5px" class="mb-2">Jump to</h3>
+      {% for key, title, fields in form.sections %}<a class="dd-item" href="#{{ key }}">{{ title }}</a>{% endfor %}
+      <hr>
+      <div class="row between small"><span class="muted">Razorpay</span>{% if ps.razorpay_ready %}<span class="badge badge-green">Connected</span>{% else %}<span class="badge badge-amber">Not set</span>{% endif %}</div>
+      <div class="row between small mt-2"><span class="muted">SMTP</span>{% if ps.smtp_ready %}<span class="badge badge-green">Ready</span>{% else %}<span class="badge badge-amber">Console only</span>{% endif %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

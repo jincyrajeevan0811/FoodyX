@@ -1,0 +1,6 @@
+{% extends "layouts/platform.html" %}
+{% block page_title %}Role permissions · {{ r.name }}{% endblock %}
+{% block heading %}Role permissions{% endblock %}
+{% block subheading %}{{ r.name }} · configure what each staff role can access{% endblock %}
+{% block top_actions %}<a class="btn btn-outline btn-sm" href="{% url 'saas:restaurant_detail' r.pk %}"><i data-lucide="arrow-left" class="icon-sm"></i>Back</a>{% endblock %}
+{% block content %}{% include "partials/permissions_matrix.html" %}{% endblock %}

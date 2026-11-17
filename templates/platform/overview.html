@@ -1,0 +1,117 @@
+{% extends "layouts/platform.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Overview{% endblock %}
+{% block heading %}Platform overview{% endblock %}
+{% block top_actions %}{% if can_manage %}<a class="btn btn-primary btn-sm" href="{% url 'saas:restaurant_add' %}"><i data-lucide="plus" class="icon-sm"></i>Onboard restaurant</a>{% endif %}{% endblock %}
+{% block content %}
+<div class="grid g-4">
+  <div class="card stat">
+    <div class="label">Restaurants <span class="ico"><i data-lucide="store"></i></span></div>
+    <div class="value">{{ restaurants_total }}</div>
+    <div class="hint">{{ on_trial }} on trial · {{ expired }} expired</div>
+  </div>
+  <div class="card stat lime">
+    <div class="label">Paying customers <span class="ico"><i data-lucide="badge-check"></i></span></div>
+    <div class="value">{{ paying_count }}</div>
+    <div class="hint">active paid plans</div>
+  </div>
+  <div class="card stat violet">
+    <div class="label">MRR <span class="ico"><i data-lucide="trending-up"></i></span></div>
+    <div class="value">{{ mrr|inr }}</div>
+    <div class="hint">monthly recurring, excl. GST</div>
+  </div>
+  <div class="card stat blue">
+    <div class="label">Collected this month <span class="ico"><i data-lucide="wallet"></i></span></div>
+    <div class="value">{{ collected_month|inr }}</div>
+    <div class="hint">{{ collected_all|inr }} all time</div>
+  </div>
+</div>
+
+<div class="grid g-main mt-3">
+  <div class="card">
+    <div class="card-head"><h3>Revenue (last 6 months)</h3><span class="right muted small">incl. GST</span></div>
+    <div class="card-body"><div class="chart-box"><canvas id="revChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Go-live checklist</h3><span class="right pill">{{ checklist_done }}/{{ checklist|length }}</span></div>
+    <div class="card-body" style="padding-top:8px">
+      <div class="progress mb-2"><span style="width:{% widthratio checklist_done checklist|length 100 %}%"></span></div>
+      {% for label, done, section in checklist %}
+      <div class="check-row">
+        <span class="check-ico {% if done %}ok{% else %}todo{% endif %}"><i data-lucide="{% if done %}check{% else %}circle-dashed{% endif %}" class="icon-sm"></i></span>
+        <span class="{% if done %}muted{% else %}strong{% endif %}">{{ label }}</span>
+        {% if not done and can_settings %}<a class="btn btn-outline btn-xs right" href="{% url 'saas:settings' %}#{{ section }}">Set up</a>{% elif done %}<span class="right badge badge-green">Done</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid g-3 mt-3">
+  <div class="card">
+    <div class="card-head"><h3>Expiring in 7 days</h3></div>
+    {% for s in expiring %}
+      <a class="list-row" href="{% url 'saas:restaurant_detail' s.restaurant.pk %}" style="color:inherit">
+        <span class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">{{ s.restaurant.name|slice:":1"|upper }}</span>
+        <div><div class="strong">{{ s.restaurant.name }}</div><div class="muted small">{{ s.plan.name }} · {{ s.get_status_display }}</div></div>
+        <span class="right badge badge-amber">{{ s.days_left }}d left</span>
+      </a>
+    {% empty %}
+      <div class="empty"><div class="em-ico"><i data-lucide="calendar-check"></i></div><b>Nothing expiring this week</b>All plans are healthy.</div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Newest restaurants</h3><a class="right card-link" href="{% url 'saas:restaurants' %}">View all</a></div>
+    {% for r in recent_restaurants %}
+      <a class="list-row" href="{% url 'saas:restaurant_detail' r.pk %}" style="color:inherit">
+        <span class="avatar">{{ r.name|slice:":1"|upper }}</span>
+        <div><div class="strong">{{ r.name }}</div><div class="muted small">{{ r.city|default:r.get_business_type_display }} · {{ r.created_at|date:"d M" }}</div></div>
+        {% if r.subscription %}<span class="right">{% badge r.subscription.effective_status %}</span>{% endif %}
+      </a>
+    {% empty %}
+      <div class="empty"><div class="em-ico"><i data-lucide="store"></i></div><b>No restaurants yet</b>Onboard your first client.</div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Today across restaurants</h3></div>
+    <div class="card-body">
+      <div class="row between"><span class="muted">Orders</span><b class="num">{{ orders_today }}</b></div>
+      <div class="row between mt-2"><span class="muted">Completed sales</span><b class="num">{{ sales_today|inr }}</b></div>
+      <hr>
+      <div class="label mb-2">Plan mix</div>
+      <div class="bar-list">
+        {% for p in plan_mix %}
+        <div class="bar-row"><span>{{ p.plan__name }}</span><b>{{ p.n }}</b><div class="bar"><span style="width:{% widthratio p.n restaurants_total 100 %}%"></span></div></div>
+        {% empty %}<p class="muted small">No subscriptions yet.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-head"><h3>Recent activity</h3><a class="right card-link" href="{% url 'saas:activity' %}">Open log</a></div>
+  <div class="table-wrap"><table class="table">
+    <tbody>
+    {% for a in recent_activity %}
+      <tr><td class="nowrap muted small">{{ a.created_at|date:"d M, h:i A" }}</td><td class="strong">{{ a.action }}</td><td class="muted">{{ a.detail|truncatechars:80 }}</td><td>{{ a.restaurant|default:"Platform" }}</td><td class="muted small">{{ a.actor|default:"System" }}</td></tr>
+    {% empty %}<tr><td class="muted center">No activity yet.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.Chart) return;
+  var ctx = document.getElementById("revChart").getContext("2d");
+  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "rgba(16,185,129,.35)"); g.addColorStop(1, "rgba(16,185,129,0)");
+  new Chart(ctx, {
+    type: "line",
+    data: { labels: {{ trend_labels|safe }}, datasets: [{ data: {{ trend_values|safe }}, borderColor: "#059669", backgroundColor: g, fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: "#a3e635", pointBorderColor: "#059669" }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return FX.money(c.parsed.y); } } } },
+      scales: { y: { beginAtZero: true, grid: { color: "rgba(120,140,130,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
+  });
+});
+</script>
+{% endblock %}

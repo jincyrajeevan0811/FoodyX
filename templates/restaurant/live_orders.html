@@ -1,0 +1,9 @@
+{% extends "layouts/app.html" %}
+{% load foodyx_tags %}
+{% block page_title %}Live orders{% endblock %}
+{% block heading %}Live orders{% endblock %}
+{% block subheading %}Everything happening right now · refreshes every 10 seconds{% endblock %}
+{% block content %}
+<div id="liveList">{% include "restaurant/partials/live_orders_list.html" %}</div>
+{% endblock %}
+{% block scripts %}<script>FX.poll("{% url 'restaurant:live_orders' %}?partial=1", "#liveList", 10000);</script>{% endblock %}
