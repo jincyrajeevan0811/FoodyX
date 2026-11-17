@@ -26,7 +26,7 @@
 <script>
 document.querySelectorAll(".qr[data-url]").forEach(function (el) {
   if (window.QRCode) {
-    new QRCode(el, { text: el.getAttribute("data-url"), width: 168, height: 168, colorDark: "#052620", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(el, { text: el.getAttribute("data-url"), width: 168, height: 168, colorDark: "#1e1b4b", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
   } else {
     el.innerHTML = '<a href="' + el.getAttribute("data-url") + '">' + el.getAttribute("data-url") + "</a>";
   }

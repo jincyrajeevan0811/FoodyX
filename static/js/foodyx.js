@@ -148,6 +148,31 @@
       });
     });
 
+    // quick "jump to" search: filters the sidebar, Enter opens the first match, Ctrl/Cmd+K focuses
+    var jump = document.querySelector("[data-jump]");
+    if (jump) {
+      var links = Array.prototype.slice.call(document.querySelectorAll("#sideNav .side-link"));
+      var matches = function () {
+        var q = jump.value.toLowerCase().trim();
+        return links.filter(function (a) { return !q || (a.getAttribute("data-label") || a.textContent.toLowerCase()).indexOf(q) >= 0; });
+      };
+      jump.addEventListener("input", function () {
+        var m = matches();
+        links.forEach(function (a) { a.style.display = m.indexOf(a) >= 0 ? "" : "none"; });
+        document.querySelectorAll("#sideNav .side-group").forEach(function (g) {
+          var any = Array.prototype.some.call(g.querySelectorAll(".side-link"), function (a) { return a.style.display !== "none"; });
+          g.style.display = any ? "" : "none";
+        });
+      });
+      jump.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { var m = matches(); if (m.length) { e.preventDefault(); window.location.href = m[0].href; } }
+        if (e.key === "Escape") { jump.value = ""; jump.dispatchEvent(new Event("input")); jump.blur(); }
+      });
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); jump.focus(); jump.select(); }
+      });
+    }
+
     // active sidebar link
     var path = window.location.pathname;
     var best = null;

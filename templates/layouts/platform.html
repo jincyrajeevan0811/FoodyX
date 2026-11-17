@@ -3,41 +3,52 @@
 {% block body %}
 <div class="app">
   <aside class="sidebar">
-    <a class="brand" href="{% url 'saas:overview' %}">{% include "partials/brand.html" %}<span class="brand-tag">ADMIN</span></a>
-    <div class="side-scroll">
-      <div class="side-group">
-        <div class="side-label">Platform</div>
-        <a class="side-link" href="{% url 'saas:overview' %}"><i data-lucide="layout-dashboard"></i>Overview</a>
-        <a class="side-link" href="{% url 'saas:restaurants' %}"><i data-lucide="store"></i>Restaurants & clients</a>
-        <a class="side-link" href="{% url 'saas:plans' %}"><i data-lucide="badge-indian-rupee"></i>Plans & pricing</a>
-        <a class="side-link" href="{% url 'saas:payments' %}"><i data-lucide="receipt-indian-rupee"></i>Payments</a>
-        <a class="side-link" href="{% url 'saas:users' %}"><i data-lucide="users"></i>Users</a>
-        <a class="side-link" href="{% url 'saas:team' %}"><i data-lucide="shield-check"></i>Team & roles</a>
-        <a class="side-link" href="{% url 'saas:activity' %}"><i data-lucide="history"></i>Activity log</a>
-        {% if can_settings %}<a class="side-link" href="{% url 'saas:settings' %}"><i data-lucide="settings"></i>Platform settings</a>{% endif %}
-      </div>
-      <div class="side-group">
-        <div class="side-label">Shortcuts</div>
-        <a class="side-link" href="{% url 'core:landing' %}" target="_blank" rel="noopener"><i data-lucide="globe"></i>Public website</a>
-        {% if request.user.is_staff %}<a class="side-link" href="/django-admin/" target="_blank" rel="noopener"><i data-lucide="database"></i>Raw data (Django admin)</a>{% endif %}
-        <a class="side-link" href="{% url 'saas:health' %}"><i data-lucide="activity"></i>Health check</a>
+    <div class="side-top">
+      <a class="brand" href="{% url 'saas:overview' %}">{% include "partials/brand.html" %}<span class="brand-tag">ADMIN</span></a>
+      <div class="venue">
+        <span class="avatar grad"><i data-lucide="shield-check" class="icon-sm"></i></span>
+        <div style="min-width:0"><b>Platform control</b><small>{{ request.user.role_label }}</small></div>
       </div>
     </div>
+    <nav class="side-scroll" id="sideNav">
+      <div class="side-group">
+        <div class="side-label">Platform</div>
+        <a class="side-link" href="{% url 'saas:overview' %}" data-label="overview"><i data-lucide="layout-dashboard"></i>Overview</a>
+        <a class="side-link" href="{% url 'saas:restaurants' %}" data-label="restaurants clients"><i data-lucide="store"></i>Restaurants & clients</a>
+        <a class="side-link" href="{% url 'saas:plans' %}" data-label="plans pricing"><i data-lucide="layers"></i>Plans & pricing</a>
+        <a class="side-link" href="{% url 'saas:payments' %}" data-label="payments invoices"><i data-lucide="wallet"></i>Payments</a>
+      </div>
+      <div class="side-group">
+        <div class="side-label">People</div>
+        <a class="side-link" href="{% url 'saas:users' %}" data-label="users"><i data-lucide="users"></i>Users</a>
+        <a class="side-link" href="{% url 'saas:team' %}" data-label="team roles"><i data-lucide="shield-check"></i>Team & roles</a>
+        <a class="side-link" href="{% url 'saas:activity' %}" data-label="activity log"><i data-lucide="history"></i>Activity log</a>
+      </div>
+      <div class="side-group">
+        <div class="side-label">System</div>
+        {% if can_settings %}<a class="side-link" href="{% url 'saas:settings' %}" data-label="platform settings"><i data-lucide="settings"></i>Platform settings</a>{% endif %}
+        <a class="side-link" href="{% url 'saas:health' %}" data-label="health check"><i data-lucide="activity"></i>Health check</a>
+        <a class="side-link" href="{% url 'core:landing' %}" target="_blank" rel="noopener" data-label="public website"><i data-lucide="globe"></i>Public website</a>
+        {% if request.user.is_staff %}<a class="side-link" href="/django-admin/" target="_blank" rel="noopener" data-label="raw data django admin"><i data-lucide="database"></i>Raw data (Django admin)</a>{% endif %}
+      </div>
+    </nav>
   </aside>
   <div class="main">
     <header class="topbar">
-      <button class="icon-btn menu-toggle" data-menu-toggle aria-label="Menu"><i data-lucide="menu"></i></button>
-      <div>
+      <button class="icon-btn menu-toggle" data-menu-toggle aria-label="Menu"><i data-lucide="panel-left"></i></button>
+      <div style="min-width:0">
         <h1>{% block heading %}Platform overview{% endblock %}</h1>
         <div class="sub">{% block subheading %}{{ site_name }} control centre{% endblock %}</div>
       </div>
       <div class="top-actions">
+        <div class="jump"><i data-lucide="search"></i><input type="search" placeholder="Jump to…" data-jump aria-label="Jump to a page"><kbd>Ctrl K</kbd></div>
         {% block top_actions %}{% endblock %}
-        <button class="icon-btn" data-theme-toggle aria-label="Toggle dark mode"><i data-lucide="moon"></i></button>
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle dark mode"><i data-lucide="sun-moon"></i></button>
         <div class="dropdown" data-dropdown>
-          <button class="user-chip icon-btn" style="width:auto;height:auto;border:0;background:none" data-dropdown-trigger>
+          <button class="user-chip" data-dropdown-trigger>
             <span class="avatar">{{ request.user.initials }}</span>
-            <span class="who" style="text-align:left"><b>{{ request.user.display_name }}</b><small>{{ request.user.role_label }}</small></span>
+            <span class="who"><b>{{ request.user.display_name }}</b><small>{{ request.user.role_label }}</small></span>
+            <i data-lucide="chevron-down" class="icon-sm muted"></i>
           </button>
           <div class="dropdown-menu" style="min-width:200px">
             <form method="post" action="{% url 'core:logout' %}">{% csrf_token %}

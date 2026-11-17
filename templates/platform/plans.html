@@ -10,7 +10,7 @@
   <div class="card card-pad{% if p.is_popular %} hero-card{% endif %}" style="display:flex;flex-direction:column">
     <div class="row">
       <h3 style="font-size:18px">{{ p.name }}</h3>
-      {% if p.is_popular %}<span class="badge badge-green right" style="background:var(--lime);color:#052620">Most popular</span>{% endif %}
+      {% if p.is_popular %}<span class="badge badge-green right" style="background:var(--lime);color:#082f49">Most popular</span>{% endif %}
       {% if not p.is_active %}<span class="badge badge-red right">Inactive</span>{% elif not p.is_public %}<span class="badge badge-slate right">Hidden</span>{% endif %}
     </div>
     <p class="muted small mt-1">{{ p.tagline|default:"—" }}</p>

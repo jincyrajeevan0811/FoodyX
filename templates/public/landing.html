@@ -2,202 +2,222 @@
 {% load foodyx_tags %}
 {% block site_content %}
 <!-- HERO -->
-<section class="hero">
+<section class="l-hero">
   <div class="container">
-    <div class="hero-grid">
-      <div>
-        <span class="eyebrow"><b>NEW</b> QR ordering · Kitchen display · Own delivery fleet</span>
-        <h1>Serve faster.<br><span class="grad">Earn more.</span><br>Stress less.</h1>
-        <p class="lead">{{ site_name }} runs your whole restaurant from one screen — lightning-fast billing, KOTs, live tables, QR and online orders, delivery riders, inventory and reports that tell you what to do next.</p>
-        <div class="hero-cta">
-          <a class="btn btn-primary btn-lg" href="{% url 'core:signup' %}">Start 14-day free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
-          {% if demo_restaurant %}<a class="btn btn-outline btn-lg" href="{% url 'storefront:store' demo_restaurant.slug %}"><i data-lucide="play-circle" class="icon-sm"></i>See a live store</a>{% else %}<a class="btn btn-outline btn-lg" href="#features"><i data-lucide="play-circle" class="icon-sm"></i>Explore features</a>{% endif %}
+    <span class="badge-pill"><b>New</b> QR ordering, kitchen display & your own delivery fleet</span>
+    <h1>The restaurant operating system that <span class="grad-text">keeps service moving.</span></h1>
+    <p class="lead">Billing, tables, kitchen tickets, QR and online orders, riders, stock and reports — one calm, fast workspace for your whole team.</p>
+    <div class="cta">
+      <a class="btn btn-primary btn-lg" href="{% url 'core:signup' %}">Start your free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
+      {% if demo_restaurant %}<a class="btn btn-outline btn-lg" href="{% url 'storefront:store' demo_restaurant.slug %}"><i data-lucide="smartphone" class="icon-sm"></i>Try a demo store</a>{% else %}<a class="btn btn-outline btn-lg" href="#features">See how it works</a>{% endif %}
+    </div>
+    <div class="trust">
+      <span><i data-lucide="check-circle-2"></i>No card required</span>
+      <span><i data-lucide="check-circle-2"></i>Live in 10 minutes</span>
+      <span><i data-lucide="check-circle-2"></i>Zero commission on orders</span>
+    </div>
+
+    <div class="preview">
+      <div class="pv">
+        <div class="pv-side">
+          <div class="brand">{% include "partials/brand.html" %}</div>
+          <div class="pv-link on"><i data-lucide="layout-dashboard"></i>Dashboard</div>
+          <div class="pv-link"><i data-lucide="monitor-smartphone"></i>POS & Tables</div>
+          <div class="pv-link"><i data-lucide="chef-hat"></i>Kitchen</div>
+          <div class="pv-link"><i data-lucide="bike"></i>Delivery</div>
+          <div class="pv-link"><i data-lucide="utensils-crossed"></i>Menu</div>
+          <div class="pv-link"><i data-lucide="bar-chart-3"></i>Reports</div>
+          <div class="pv-link"><i data-lucide="users"></i>Customers</div>
         </div>
-        <div class="hero-note">
-          <span><i data-lucide="check-circle-2"></i>No card needed</span>
-          <span><i data-lucide="check-circle-2"></i>Set up in 10 minutes</span>
-          <span><i data-lucide="check-circle-2"></i>0% commission</span>
-        </div>
-      </div>
-      <div class="mock">
-        <div class="mock-window">
-          <div class="mock-bar"><i></i><i></i><i></i><span>foodyx · Dashboard</span></div>
-          <div class="mock-body">
-            <div class="mock-stats">
-              <div class="mock-stat"><small>TODAY'S SALES</small><b>₹48,320</b></div>
-              <div class="mock-stat"><small>ORDERS</small><b>126</b></div>
-              <div class="mock-stat"><small>AVG. ORDER</small><b>₹384</b></div>
+        <div class="pv-main">
+          <div class="pv-kpis">
+            <div><small>Today's sales</small><b>₹48,320</b></div>
+            <div><small>Orders</small><b>126</b></div>
+            <div><small>Avg. order</small><b>₹384</b></div>
+            <div><small>Running</small><b>9</b></div>
+          </div>
+          <div class="pv-row">
+            <div class="pv-card">
+              <h5>Floor · Main dining</h5>
+              <div class="pv-tables">
+                <div class="o">T1<small>₹1,240</small></div><div>T2<small>Free</small></div><div class="b">T3<small>Billed</small></div><div class="o">T4<small>₹860</small></div><div>T5<small>Free</small></div>
+                <div>T6<small>Free</small></div><div class="o">T7<small>₹2,110</small></div><div class="o">T8<small>₹430</small></div><div class="b">T9<small>Billed</small></div><div>T10<small>Free</small></div>
+              </div>
             </div>
-            <div class="mock-tables">
-              <div class="mt-o">T1<br>₹1,240</div><div class="mt-f">T2<br>Free</div><div class="mt-b">T3<br>Billed</div><div class="mt-o">T4<br>₹860</div><div class="mt-f">T5<br>Free</div>
-              <div class="mt-f">T6<br>Free</div><div class="mt-o">T7<br>₹2,110</div><div class="mt-o">T8<br>₹430</div><div class="mt-b">T9<br>Billed</div><div class="mt-f">T10<br>Free</div>
-            </div>
-            <div class="mock-stat" style="display:flex;align-items:center;gap:10px">
-              <span style="width:34px;height:34px;border-radius:10px;background:#ecfdf5;color:#059669;display:grid;place-items:center"><i data-lucide="sparkles" class="icon-sm"></i></span>
-              <div><small>SMART INSIGHT</small><b style="font-size:13px">Peak at 8 PM — add one more captain on Fridays.</b></div>
+            <div class="pv-card">
+              <h5>Kitchen queue</h5>
+              <div class="pv-kot"><span class="badge badge-blue">New</span>T7 · 2 × Biriyani<span class="muted" style="margin-left:auto">2m</span></div>
+              <div class="pv-kot"><span class="badge badge-amber">Cooking</span>T1 · Fish curry<span class="muted" style="margin-left:auto">9m</span></div>
+              <div class="pv-kot"><span class="badge badge-green">Ready</span>Takeaway #042<span class="muted" style="margin-left:auto">14m</span></div>
             </div>
           </div>
+          <div class="pv-card">
+            <h5>Sales by hour</h5>
+            <div class="pv-bars"><span style="height:18%"></span><span style="height:30%"></span><span style="height:42%"></span><span style="height:64%"></span><span style="height:52%"></span><span style="height:28%"></span><span style="height:22%"></span><span style="height:38%"></span><span style="height:70%"></span><span style="height:96%"></span><span style="height:84%"></span><span style="height:46%"></span></div>
+          </div>
         </div>
-        <div class="float-card fc-1"><span class="fc-ico" style="background:#ecfdf5;color:#059669"><i data-lucide="badge-check"></i></span><div><b>UPI payment received</b><small>₹1,240 · Table T1</small></div></div>
-        <div class="float-card fc-2"><span class="fc-ico" style="background:#f2fbe1;color:#65a30d"><i data-lucide="bike"></i></span><div><b>Rider 2 min away</b><small>Order #1711-042 · OTP 4821</small></div></div>
-        <div class="float-card fc-3"><span class="fc-ico" style="background:#f1ebfe;color:#7c3aed"><i data-lucide="qr-code"></i></span><div><b>New QR order · T7</b><small>2 × Chicken Biriyani</small></div></div>
       </div>
     </div>
-    <div class="stats-band">
-      <div><b>&lt;3 sec</b><span>to bill a table</span></div>
-      <div><b>18</b><span>modules in one app</span></div>
-      <div><b>8 roles</b><span>with their own access</span></div>
-      <div><b>0%</b><span>commission on orders</span></div>
+
+    <div class="logo-row">
+      <span><i data-lucide="utensils"></i>Restaurants</span><span><i data-lucide="coffee"></i>Cafés</span><span><i data-lucide="cooking-pot"></i>Cloud kitchens</span>
+      <span><i data-lucide="hotel"></i>Hotels</span><span><i data-lucide="wine"></i>Bars & lounges</span><span><i data-lucide="croissant"></i>Bakeries</span><span><i data-lucide="store"></i>QSR chains</span>
     </div>
   </div>
 </section>
 
-<div class="marquee">
-  <div class="marquee-track">
-    {% for i in "12" %}
-    <span><i data-lucide="utensils"></i>Restaurants</span><span><i data-lucide="coffee"></i>Cafés</span><span><i data-lucide="cooking-pot"></i>Cloud kitchens</span><span><i data-lucide="hotel"></i>Hotels</span><span><i data-lucide="wine"></i>Bars & lounges</span><span><i data-lucide="croissant"></i>Bakeries</span><span><i data-lucide="store"></i>QSR chains</span><span><i data-lucide="indian-rupee"></i>Razorpay UPI</span><span><i data-lucide="printer"></i>Thermal printers</span><span><i data-lucide="monitor"></i>Kitchen displays</span><span><i data-lucide="qr-code"></i>QR menus</span>
-    {% endfor %}
-  </div>
-</div>
-
-<!-- FEATURES -->
+<!-- BENTO FEATURES -->
 <section class="section" id="features">
   <div class="container">
-    <div class="s-title">
-      <span class="s-kicker">Everything in one place</span>
-      <h2>Every tool your restaurant needs — beautifully simple.</h2>
-      <p>From the first KOT of the morning to the closing cash count, {{ site_name }} keeps every person on the same page.</p>
+    <div class="s-head">
+      <span class="eyebrow-s"><i data-lucide="sparkles" class="icon-sm"></i>Product</span>
+      <h2>Everything a busy service needs. Nothing it doesn't.</h2>
+      <p>Each module is designed around a real shift — from the first KOT of the morning to the closing cash count.</p>
     </div>
-    <div class="feature-grid">
+    <div class="bento">
+      <div class="bento-card span-2 dark">
+        <div class="b-ico"><i data-lucide="zap"></i></div>
+        <h3>Billing in under three seconds</h3>
+        <p>Tap the table, tap the dishes, send the KOT. Discounts, coupons, split payments and change are worked out for you.</p>
+        <div class="mini-list">
+          <div><i data-lucide="banknote" class="icon-sm"></i>Cash<b>₹500</b></div>
+          <div><i data-lucide="smartphone" class="icon-sm"></i>UPI<b>₹740</b></div>
+          <div><i data-lucide="badge-check" class="icon-sm"></i>Table T1 settled and freed automatically</div>
+        </div>
+      </div>
+      <div class="bento-card tint">
+        <div class="b-ico"><i data-lucide="chef-hat"></i></div>
+        <h3>A kitchen that keeps pace</h3>
+        <p>Tickets chime on the kitchen display and change colour when food is running late.</p>
+      </div>
+      <div class="bento-card">
+        <div class="b-ico"><i data-lucide="lock"></i></div>
+        <h3>Tables that can't clash</h3>
+        <p>A table locks to the captain serving it, so no order is ever entered twice.</p>
+      </div>
+      <div class="bento-card">
+        <div class="b-ico"><i data-lucide="qr-code"></i></div>
+        <h3>QR ordering at every table</h3>
+        <p>Guests browse, order and call a waiter from their phone. You accept with one tap.</p>
+      </div>
+      <div class="bento-card tint">
+        <div class="b-ico"><i data-lucide="line-chart"></i></div>
+        <h3>Reports that give advice</h3>
+        <p>Peak hours, best sellers and slow movers — with plain-language tips on what to do next.</p>
+      </div>
+    </div>
+    <div class="features-list">
       {% for icon, title, text in features %}
-      <div class="feature"><div class="f-ico"><i data-lucide="{{ icon }}"></i></div><h3>{{ title }}</h3><p>{{ text }}</p></div>
+      <div><i data-lucide="{{ icon }}"></i><div><b>{{ title }}</b><span>{{ text }}</span></div></div>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<!-- FLOW -->
-<section class="section section-dark" id="flow">
+<!-- ROLES -->
+<section class="section alt" id="roles">
   <div class="container">
-    <div class="s-title">
-      <span class="s-kicker">One order, every screen</span>
-      <h2>From scan to settle in seconds.</h2>
-      <p>Each person sees exactly what they need, the moment they need it.</p>
+    <div class="s-head">
+      <span class="eyebrow-s"><i data-lucide="users" class="icon-sm"></i>For your team</span>
+      <h2>One app. The right screen for every role.</h2>
+      <p>Everyone signs in with their own login and sees only what their job needs.</p>
     </div>
-    <div class="grid g-4">
-      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="scan-line"></i></div><h3 class="mt-2" style="font-size:17px">Guest scans & orders</h3><p style="color:#a6d1c1;margin:8px 0 0">QR menu with photos, veg marks and a cart — or call a waiter with one tap.</p></div>
-      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="user-check"></i></div><h3 class="mt-2" style="font-size:17px">Captain accepts</h3><p style="color:#a6d1c1;margin:8px 0 0">Tables lock to the captain serving them, so nothing is ever entered twice.</p></div>
-      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="chef-hat"></i></div><h3 class="mt-2" style="font-size:17px">Kitchen cooks</h3><p style="color:#a6d1c1;margin:8px 0 0">Tickets chime on the kitchen display with timers that turn red when late.</p></div>
-      <div class="glass"><div class="f-ico" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(163,230,53,.16);color:var(--lime)"><i data-lucide="wallet"></i></div><h3 class="mt-2" style="font-size:17px">Cashier settles</h3><p style="color:#a6d1c1;margin:8px 0 0">Cash, UPI or card — or split across all three. The table frees itself.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- DELIVERY -->
-<section class="section" id="delivery">
-  <div class="container split">
-    <div>
-      <span class="s-kicker">Home delivery</span>
-      <h2 style="font-size:clamp(28px,3.4vw,42px);font-weight:800;letter-spacing:-.035em">Your own delivery fleet — without the commission.</h2>
-      <p class="muted mt-2" style="font-size:16px">Take orders on your own online store, assign riders in one tap and confirm every drop with a customer OTP.</p>
-      <ul class="tick-list">
-        <li><span class="tk"><i data-lucide="map-pin" class="icon-sm"></i></span>Delivery radius, fee and minimum order you control</li>
-        <li><span class="tk"><i data-lucide="zap" class="icon-sm"></i></span>Auto-assign the nearest free rider</li>
-        <li><span class="tk"><i data-lucide="key-round" class="icon-sm"></i></span>OTP proof of delivery and cash-on-delivery collection</li>
-        <li><span class="tk"><i data-lucide="calculator" class="icon-sm"></i></span>Rider cash-in-hand totals for end-of-day settlement</li>
-        <li><span class="tk"><i data-lucide="smartphone" class="icon-sm"></i></span>Live order tracking page for your customer</li>
-      </ul>
-    </div>
-    <div class="card card-pad" style="border-radius:24px;box-shadow:0 40px 80px -40px rgba(6,40,32,.35)">
-      <div class="row"><b>Order #1711-031</b><span class="badge badge-blue right">Out for delivery</span></div>
-      <div class="route" style="background:linear-gradient(135deg,#f3fbf7,#eef6ff)">
-        <svg viewBox="0 0 400 210" preserveAspectRatio="none"><path d="M30 170 C 110 160, 120 70, 200 90 S 310 40, 370 40" fill="none" stroke="#10b981" stroke-width="4" stroke-dasharray="8 8"/><circle cx="30" cy="170" r="9" fill="#059669"/><circle cx="210" cy="88" r="11" fill="#a3e635" stroke="#052620" stroke-width="3"/><circle cx="370" cy="40" r="9" fill="#f59e0b"/></svg>
+    <div class="roles-wrap">
+      <div class="role-tabs" id="roleTabs">
+        <button class="role-tab active" data-role="0"><span class="qi"><i data-lucide="crown"></i></span><span><b>Owner & manager</b><small>Run the whole business</small></span></button>
+        <button class="role-tab" data-role="1"><span class="qi"><i data-lucide="notebook-pen"></i></span><span><b>Captain</b><small>Take table orders</small></span></button>
+        <button class="role-tab" data-role="2"><span class="qi"><i data-lucide="chef-hat"></i></span><span><b>Kitchen</b><small>Cook in the right order</small></span></button>
+        <button class="role-tab" data-role="3"><span class="qi"><i data-lucide="wallet"></i></span><span><b>Cashier</b><small>Bill and collect</small></span></button>
+        <button class="role-tab" data-role="4"><span class="qi"><i data-lucide="bike"></i></span><span><b>Rider</b><small>Deliver with OTP</small></span></button>
       </div>
-      <div class="row mt-2"><span class="avatar">AK</span><div><b>Arjun · Rider</b><div class="muted small">2.1 km away · arriving in 6 min</div></div><span class="pill right">OTP 4821</span></div>
+      <div class="role-panel" id="rolePanel"></div>
     </div>
   </div>
 </section>
 
-<!-- HARDWARE -->
-<section class="section" style="padding-top:0">
+<!-- CHANNELS -->
+<section class="section" id="channels">
   <div class="container">
-    <div class="s-title"><span class="s-kicker">Plug & play</span><h2>Works with the hardware you already own.</h2></div>
-    <div class="hw-grid">
-      <div class="hw"><span class="f-ico"><i data-lucide="printer"></i></span>Thermal bill printers</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="ticket"></i></span>KOT printers</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="monitor"></i></span>Kitchen displays</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="archive"></i></span>Cash drawers</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="scan-barcode"></i></span>Barcode scanners</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="scale"></i></span>Weighing scales</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="credit-card"></i></span>Card & UPI terminals</div>
-      <div class="hw"><span class="f-ico"><i data-lucide="tablet-smartphone"></i></span>Tablets & phones</div>
+    <div class="s-head">
+      <span class="eyebrow-s"><i data-lucide="route" class="icon-sm"></i>Ordering</span>
+      <h2>Every way your guests order — in one queue.</h2>
+      <p>Dine-in, QR, takeaway and delivery all land in the same kitchen and the same reports.</p>
     </div>
-  </div>
-</section>
-
-<!-- STEPS -->
-<section class="section" style="background:linear-gradient(180deg,#f6faf8,#fff)">
-  <div class="container">
-    <div class="s-title"><span class="s-kicker">Get started</span><h2>Up and running in three steps.</h2></div>
-    <div class="steps">{% for title, text in steps %}<div class="step"><h3>{{ title }}</h3><p>{{ text }}</p></div>{% endfor %}</div>
+    <div class="channels">
+      <div class="channel"><span class="c-num">01</span><h3>Scan & order at the table</h3><p>Printable QR codes for every table and room. Orders arrive linked to the right table, ready to accept.</p></div>
+      <div class="channel"><span class="c-num">02</span><h3>Your own online store</h3><p>A fast, commission-free ordering site for takeaway and delivery, with coupons and Razorpay payments.</p></div>
+      <div class="channel"><span class="c-num">03</span><h3>Delivery with your riders</h3><p>Auto-assign the nearest free rider, track every drop and confirm it with the customer's OTP.</p></div>
+    </div>
+    <div class="numbers mt-4">
+      <div><b>&lt; 3 sec</b><span>to bill a table</span></div>
+      <div><b>18</b><span>modules, one login</span></div>
+      <div><b>8</b><span>staff roles built in</span></div>
+      <div><b>0%</b><span>commission, ever</span></div>
+    </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section class="section" id="pricing">
+<section class="section alt" id="pricing">
   <div class="container">
-    <div class="s-title"><span class="s-kicker">Simple pricing</span><h2>Plans that grow with your business.</h2><p>Every plan starts with a free trial. Prices are per outlet, plus GST.</p></div>
-    <div class="center"><div class="billing-toggle" id="cycleToggle"><button type="button" class="active" data-cycle="monthly">Monthly</button><button type="button" data-cycle="yearly">Yearly <em>2 months free</em></button></div></div>
+    <div class="s-head">
+      <span class="eyebrow-s"><i data-lucide="tag" class="icon-sm"></i>Pricing</span>
+      <h2>Simple plans. Start free, upgrade when you're ready.</h2>
+      <p>Prices are per outlet and exclude GST. Every plan starts with a free trial.</p>
+    </div>
+    <div class="center"><div class="billing-toggle" id="cycleToggle"><button type="button" class="active" data-cycle="monthly">Monthly</button><button type="button" data-cycle="yearly">Yearly <em>Save 2 months</em></button></div></div>
     <div class="price-grid">
       {% for p in plans %}
       <div class="price{% if p.is_popular %} popular{% endif %}">
-        {% if p.is_popular %}<span class="p-badge">Most popular</span>{% endif %}
+        {% if p.is_popular %}<span class="p-badge">Recommended</span>{% endif %}
         <h3>{{ p.name }}</h3>
         <div class="p-tag">{{ p.tagline }}</div>
         {% if p.is_custom_pricing %}
-          <div class="p-amt">Let's talk</div><div class="muted small">for chains & franchises</div>
+          <div class="p-amt">Custom</div><div class="muted small">for chains & franchises</div>
         {% else %}
           <div class="p-amt" data-monthly="{{ p.price_monthly|inr }}" data-yearly="{{ p.price_yearly|inr }}">{{ p.price_monthly|inr }}<small data-unit> /month</small></div>
           <div class="muted small">+ GST · {{ p.trial_days }}-day free trial</div>
         {% endif %}
         <ul>
-          {% for h in p.highlight_list %}<li><i data-lucide="check-circle-2"></i>{{ h }}</li>{% empty %}{% for f in p.feature_labels %}<li><i data-lucide="check-circle-2"></i>{{ f }}</li>{% endfor %}{% endfor %}
+          {% for h in p.highlight_list %}<li><i data-lucide="check"></i>{{ h }}</li>{% empty %}{% for f in p.feature_labels %}<li><i data-lucide="check"></i>{{ f }}</li>{% endfor %}{% endfor %}
         </ul>
         {% if p.is_custom_pricing %}
-          <a class="btn btn-outline btn-block" href="mailto:{{ platform.sales_email|default:platform.support_email }}">Contact sales</a>
+          <a class="btn btn-outline btn-block" href="mailto:{{ platform.sales_email|default:platform.support_email }}">Talk to sales</a>
         {% else %}
-          <a class="btn {% if p.is_popular %}btn-lime{% else %}btn-outline{% endif %} btn-block" href="{% url 'core:signup' %}?plan={{ p.slug }}">Start free trial</a>
+          <a class="btn {% if p.is_popular %}btn-primary{% else %}btn-outline{% endif %} btn-block" href="{% url 'core:signup' %}?plan={{ p.slug }}">Start free trial</a>
         {% endif %}
       </div>
       {% empty %}
       <p class="center muted">Plans are being prepared — check back soon.</p>
       {% endfor %}
     </div>
-    <p class="center muted small mt-3"><i data-lucide="shield-check" class="icon-sm" style="vertical-align:-3px"></i> Secure payments via Razorpay — UPI, cards and netbanking.</p>
   </div>
 </section>
 
 <!-- FAQ -->
-<section class="section" id="faq" style="padding-top:20px">
+<section class="section" id="faq">
   <div class="container">
-    <div class="s-title"><span class="s-kicker">FAQ</span><h2>Questions, answered.</h2></div>
+    <div class="s-head"><span class="eyebrow-s"><i data-lucide="help-circle" class="icon-sm"></i>FAQ</span><h2>Good questions, straight answers.</h2></div>
     <div class="faq">{% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}</div>
   </div>
 </section>
 
 <section class="container">
   <div class="cta-band">
-    <h2>Ready to serve more guests with less effort?</h2>
-    <p>Join restaurants, cafés and cloud kitchens running on {{ site_name }}.</p>
-    <a class="btn btn-lime btn-lg" href="{% url 'core:signup' %}">Start your free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
+    <h2>Give your team a calmer, faster service.</h2>
+    <p>Set up your menu and tables today — your first bill is ten minutes away.</p>
+    <div class="row" style="justify-content:center;flex-wrap:wrap">
+      <a class="btn btn-lime btn-lg" href="{% url 'core:signup' %}">Start free trial <i data-lucide="arrow-right" class="icon-sm"></i></a>
+      <a class="btn btn-outline btn-lg" href="{% url 'core:login' %}">Sign in</a>
+    </div>
   </div>
 </section>
 {% endblock %}
 {% block scripts %}
 <script>
 (function () {
-  var t = document.getElementById("cycleToggle"); if (!t) return;
-  t.addEventListener("click", function (e) {
+  var t = document.getElementById("cycleToggle");
+  if (t) t.addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     var cycle = b.getAttribute("data-cycle");
     t.querySelectorAll("button").forEach(function (x) { x.classList.toggle("active", x === b); });
@@ -206,6 +226,30 @@
       el.querySelector("[data-unit]").textContent = cycle === "yearly" ? " /year" : " /month";
     });
   });
+
+  var roles = [
+    { t: "See the whole business at a glance", p: "Live sales, running tables, smart insights and every report — on any device.",
+      l: ["Dashboard with today's sales, orders and top sellers", "Menu, prices and availability in a few clicks", "Staff logins and role permissions you control", "Daily item sales, payment split and CSV export"] },
+    { t: "Take orders without the paper", p: "A fast table view built for one-handed use on the floor.",
+      l: ["Colour-coded tables: free, occupied, billed, reserved, cleaning", "Notes per dish — “less spicy”, “no onion”", "Only new items go to the kitchen when guests order more", "Tables lock to you, so nobody double-enters an order"] },
+    { t: "Cook in the right order", p: "A kitchen display that keeps the queue honest.",
+      l: ["New tickets arrive with a sound", "Tap to move: new → preparing → ready → picked up", "Timers turn amber at 10 and red at 20 minutes", "Filter by station: main kitchen, tandoor, beverages"] },
+    { t: "Settle bills in seconds", p: "Print, split and collect without a calculator.",
+      l: ["Cash, UPI, card or a split across all three", "Change worked out automatically", "Coupons and discounts with an audit trail", "Find and reprint any bill — they're kept forever"] },
+    { t: "Deliver with confidence", p: "A simple rider screen for the road.",
+      l: ["Go online to receive deliveries", "One-tap call and directions to the customer", "Confirm every drop with a 4-digit OTP", "Cash-on-delivery totals for end-of-day settlement"] }
+  ];
+  var panel = document.getElementById("rolePanel"), tabs = document.getElementById("roleTabs");
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  function show(i) {
+    var r = roles[i];
+    panel.innerHTML = "<h3>" + esc(r.t) + '</h3><p class="muted mt-1" style="font-size:16px">' + esc(r.p) + "</p><ul>" +
+      r.l.map(function (x) { return '<li><i data-lucide="check-circle-2"></i><span>' + esc(x) + "</span></li>"; }).join("") + "</ul>";
+    tabs.querySelectorAll(".role-tab").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-role") === String(i)); });
+    FX.icons();
+  }
+  tabs.addEventListener("click", function (e) { var b = e.target.closest(".role-tab"); if (b) show(Number(b.getAttribute("data-role"))); });
+  show(0);
 })();
 </script>
 {% endblock %}

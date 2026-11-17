@@ -2,9 +2,9 @@
 {% block title %}{{ title }} · {{ site_name }}{% endblock %}
 {% block site_content %}
 <section class="section">
-  <div class="container" style="max-width:780px">
-    <span class="s-kicker">Legal</span>
-    <h1 style="font-size:40px;font-weight:800;letter-spacing:-.03em">{{ title }}</h1>
+  <div class="container legal" style="padding-top:40px">
+    <span class="eyebrow-s">Legal</span>
+    <h1 style="font-size:40px;letter-spacing:-.035em">{{ title }}</h1>
     <p class="muted">Last updated {% now "d F Y" %}</p>
     {% if page == "terms" %}
       <h3 class="mt-4">Using {{ site_name }}</h3>

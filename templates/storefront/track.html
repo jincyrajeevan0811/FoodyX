@@ -5,7 +5,7 @@
 {% block body %}
 <header class="store-hero" style="padding-bottom:56px">
   <div class="container">
-    <a href="{% if order.table %}{% url 'storefront:table_menu' order.table.qr_token %}{% else %}{% url 'storefront:store' r.slug %}{% endif %}" style="color:#b6e0cf;font-weight:600;font-size:13px"><i data-lucide="arrow-left" class="icon-sm" style="vertical-align:-3px"></i> Back to menu</a>
+    <a href="{% if order.table %}{% url 'storefront:table_menu' order.table.qr_token %}{% else %}{% url 'storefront:store' r.slug %}{% endif %}" style="color:#e0e7ff;font-weight:600;font-size:13px"><i data-lucide="arrow-left" class="icon-sm" style="vertical-align:-3px"></i> Back to menu</a>
     <h1 class="mt-2">{% if closed %}Order {{ main.get_status_display|lower }}{% elif main.status == "awaiting" %}Order placed!{% else %}Thanks — we're on it!{% endif %}</h1>
     <p>{{ r.name }} · Order #{{ order.number }}{% if order.table %} · {{ order.table.name }}{% endif %}</p>
   </div>

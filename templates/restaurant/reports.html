@@ -100,12 +100,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var labels = single ? hourly.map(function (_, h) { return (h < 10 ? "0" : "") + h + ":00"; }) : {{ trend_labels|safe }};
   var values = single ? hourly : {{ trend_values|safe }};
   var ctx = document.getElementById("trendChart").getContext("2d");
-  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "#10b981"); g.addColorStop(1, "#a3e635");
+  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "#6366f1"); g.addColorStop(1, "#22d3ee");
   new Chart(ctx, {
     type: "bar",
     data: { labels: labels, datasets: [{ data: values, backgroundColor: g, borderRadius: 8, maxBarThickness: 34 }] },
     options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return FX.money(c.parsed.y); } } } },
-      scales: { y: { beginAtZero: true, grid: { color: "rgba(120,140,130,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
+      scales: { y: { beginAtZero: true, grid: { color: "rgba(100,116,139,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
   });
   var sc = document.getElementById("splitChart");
   if (sc) {
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
       type: "doughnut",
       data: { labels: [{% for p in split %}"{{ p.method|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
               datasets: [{ data: [{% for p in split %}{{ p.amount|stringformat:"s" }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                           backgroundColor: ["#059669", "#a3e635", "#0d9488", "#7c3aed", "#f59e0b", "#64748b"], borderWidth: 0 }] },
+                           backgroundColor: ["#4f46e5", "#22d3ee", "#7c3aed", "#f59e0b", "#10b981", "#64748b"], borderWidth: 0 }] },
       options: { maintainAspectRatio: false, cutout: "68%", plugins: { legend: { position: "right" } } }
     });
   }

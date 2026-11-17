@@ -1,46 +1,44 @@
 {% extends "layouts/platform.html" %}
 {% load foodyx_tags %}
 {% block page_title %}Overview{% endblock %}
-{% block heading %}Platform overview{% endblock %}
-{% block top_actions %}{% if can_manage %}<a class="btn btn-primary btn-sm" href="{% url 'saas:restaurant_add' %}"><i data-lucide="plus" class="icon-sm"></i>Onboard restaurant</a>{% endif %}{% endblock %}
+{% block heading %}Overview{% endblock %}
+{% block subheading %}{% now "l, d F Y" %}{% endblock %}
 {% block content %}
-<div class="grid g-4">
-  <div class="card stat">
-    <div class="label">Restaurants <span class="ico"><i data-lucide="store"></i></span></div>
-    <div class="value">{{ restaurants_total }}</div>
-    <div class="hint">{{ on_trial }} on trial · {{ expired }} expired</div>
+<section class="welcome">
+  <div>
+    <h2>Welcome back, {{ request.user.first_name|default:request.user.display_name }}</h2>
+    <p>{{ restaurants_total }} restaurant{{ restaurants_total|pluralize }} on {{ site_name }} · {{ paying_count }} paying · {{ on_trial }} on trial{% if expiring %} · <b>{{ expiring|length }} expiring this week</b>{% endif %}</p>
   </div>
-  <div class="card stat lime">
-    <div class="label">Paying customers <span class="ico"><i data-lucide="badge-check"></i></span></div>
-    <div class="value">{{ paying_count }}</div>
-    <div class="hint">active paid plans</div>
+  <div class="w-actions">
+    {% if can_manage %}<a class="btn btn-lime" href="{% url 'saas:restaurant_add' %}"><i data-lucide="plus" class="icon-sm"></i>Onboard restaurant</a>{% endif %}
+    <a class="btn btn-outline" href="{% url 'saas:plans' %}"><i data-lucide="layers" class="icon-sm"></i>Plans</a>
   </div>
-  <div class="card stat violet">
-    <div class="label">MRR <span class="ico"><i data-lucide="trending-up"></i></span></div>
-    <div class="value">{{ mrr|inr }}</div>
-    <div class="hint">monthly recurring, excl. GST</div>
-  </div>
-  <div class="card stat blue">
-    <div class="label">Collected this month <span class="ico"><i data-lucide="wallet"></i></span></div>
-    <div class="value">{{ collected_month|inr }}</div>
-    <div class="hint">{{ collected_all|inr }} all time</div>
-  </div>
+</section>
+
+<div class="kpis mt-3">
+  <div class="kpi"><span class="k-ico"><i data-lucide="store"></i></span><div><small>Restaurants</small><b>{{ restaurants_total }}</b><span>{{ on_trial }} on trial · {{ expired }} expired</span></div></div>
+  <div class="kpi"><span class="k-ico cyan"><i data-lucide="badge-check"></i></span><div><small>Paying customers</small><b>{{ paying_count }}</b><span>active paid plans</span></div></div>
+  <div class="kpi"><span class="k-ico violet"><i data-lucide="trending-up"></i></span><div><small>MRR</small><b>{{ mrr|inr }}</b><span>monthly recurring, excl. GST</span></div></div>
+  <div class="kpi"><span class="k-ico amber"><i data-lucide="wallet"></i></span><div><small>Collected this month</small><b>{{ collected_month|inr }}</b><span>{{ collected_all|inr }} all time</span></div></div>
 </div>
 
 <div class="grid g-main mt-3">
   <div class="card">
-    <div class="card-head"><h3>Revenue (last 6 months)</h3><span class="right muted small">incl. GST</span></div>
+    <div class="card-head"><h3>Revenue</h3><span class="right muted small">Last 6 months · incl. GST</span></div>
     <div class="card-body"><div class="chart-box"><canvas id="revChart"></canvas></div></div>
   </div>
   <div class="card">
-    <div class="card-head"><h3>Go-live checklist</h3><span class="right pill">{{ checklist_done }}/{{ checklist|length }}</span></div>
-    <div class="card-body" style="padding-top:8px">
-      <div class="progress mb-2"><span style="width:{% widthratio checklist_done checklist|length 100 %}%"></span></div>
+    <div class="card-head"><h3>Go-live checklist</h3></div>
+    <div class="card-body">
+      <div class="row mb-2" style="gap:16px">
+        <div class="ring" style="--p:{% widthratio checklist_done checklist|length 100 %}"><span>{{ checklist_done }}/{{ checklist|length }}</span></div>
+        <div><b>{% if checklist_done == checklist|length %}Ready for launch{% else %}{{ checklist_left }} step{{ checklist_left|pluralize }} to go live{% endif %}</b><p class="muted small mb-0">Finish these in Platform settings before onboarding paying customers.</p></div>
+      </div>
       {% for label, done, section in checklist %}
       <div class="check-row">
-        <span class="check-ico {% if done %}ok{% else %}todo{% endif %}"><i data-lucide="{% if done %}check{% else %}circle-dashed{% endif %}" class="icon-sm"></i></span>
-        <span class="{% if done %}muted{% else %}strong{% endif %}">{{ label }}</span>
-        {% if not done and can_settings %}<a class="btn btn-outline btn-xs right" href="{% url 'saas:settings' %}#{{ section }}">Set up</a>{% elif done %}<span class="right badge badge-green">Done</span>{% endif %}
+        <span class="check-ico {% if done %}ok{% else %}todo{% endif %}">{% if done %}<i data-lucide="check" class="icon-sm"></i>{% endif %}</span>
+        <span class="{% if done %}muted{% else %}strong{% endif %}" style="{% if done %}text-decoration:line-through{% endif %}">{{ label }}</span>
+        {% if not done and can_settings %}<a class="btn btn-soft btn-xs right" href="{% url 'saas:settings' %}#{{ section }}">Set up</a>{% endif %}
       </div>
       {% endfor %}
     </div>
@@ -52,16 +50,16 @@
     <div class="card-head"><h3>Expiring in 7 days</h3></div>
     {% for s in expiring %}
       <a class="list-row" href="{% url 'saas:restaurant_detail' s.restaurant.pk %}" style="color:inherit">
-        <span class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">{{ s.restaurant.name|slice:":1"|upper }}</span>
+        <span class="avatar">{{ s.restaurant.name|slice:":1"|upper }}</span>
         <div><div class="strong">{{ s.restaurant.name }}</div><div class="muted small">{{ s.plan.name }} · {{ s.get_status_display }}</div></div>
         <span class="right badge badge-amber">{{ s.days_left }}d left</span>
       </a>
     {% empty %}
-      <div class="empty"><div class="em-ico"><i data-lucide="calendar-check"></i></div><b>Nothing expiring this week</b>All plans are healthy.</div>
+      <div class="empty"><div class="em-ico"><i data-lucide="calendar-check"></i></div><b>Nothing expiring</b>All plans are healthy this week.</div>
     {% endfor %}
   </div>
   <div class="card">
-    <div class="card-head"><h3>Newest restaurants</h3><a class="right card-link" href="{% url 'saas:restaurants' %}">View all</a></div>
+    <div class="card-head"><h3>Newest restaurants</h3><a class="right card-link" href="{% url 'saas:restaurants' %}">View all →</a></div>
     {% for r in recent_restaurants %}
       <a class="list-row" href="{% url 'saas:restaurant_detail' r.pk %}" style="color:inherit">
         <span class="avatar">{{ r.name|slice:":1"|upper }}</span>
@@ -73,7 +71,7 @@
     {% endfor %}
   </div>
   <div class="card">
-    <div class="card-head"><h3>Today across restaurants</h3></div>
+    <div class="card-head"><h3>Today on the platform</h3></div>
     <div class="card-body">
       <div class="row between"><span class="muted">Orders</span><b class="num">{{ orders_today }}</b></div>
       <div class="row between mt-2"><span class="muted">Completed sales</span><b class="num">{{ sales_today|inr }}</b></div>
@@ -89,7 +87,7 @@
 </div>
 
 <div class="card mt-3">
-  <div class="card-head"><h3>Recent activity</h3><a class="right card-link" href="{% url 'saas:activity' %}">Open log</a></div>
+  <div class="card-head"><h3>Recent activity</h3><a class="right card-link" href="{% url 'saas:activity' %}">Open log →</a></div>
   <div class="table-wrap"><table class="table">
     <tbody>
     {% for a in recent_activity %}
@@ -105,12 +103,12 @@
 document.addEventListener("DOMContentLoaded", function () {
   if (!window.Chart) return;
   var ctx = document.getElementById("revChart").getContext("2d");
-  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "rgba(16,185,129,.35)"); g.addColorStop(1, "rgba(16,185,129,0)");
+  var g = ctx.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "#6366f1"); g.addColorStop(1, "#22d3ee");
   new Chart(ctx, {
-    type: "line",
-    data: { labels: {{ trend_labels|safe }}, datasets: [{ data: {{ trend_values|safe }}, borderColor: "#059669", backgroundColor: g, fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: "#a3e635", pointBorderColor: "#059669" }] },
+    type: "bar",
+    data: { labels: {{ trend_labels|safe }}, datasets: [{ data: {{ trend_values|safe }}, backgroundColor: g, borderRadius: 8, maxBarThickness: 44 }] },
     options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return FX.money(c.parsed.y); } } } },
-      scales: { y: { beginAtZero: true, grid: { color: "rgba(120,140,130,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
+      scales: { y: { beginAtZero: true, grid: { color: "rgba(100,116,139,.12)" }, ticks: { callback: function (v) { return FX.money(v); } } }, x: { grid: { display: false } } } }
   });
 });
 </script>

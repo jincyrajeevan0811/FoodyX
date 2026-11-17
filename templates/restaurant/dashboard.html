@@ -1,95 +1,68 @@
 {% extends "layouts/app.html" %}
 {% load foodyx_tags %}
 {% block page_title %}Dashboard{% endblock %}
-{% block heading %}{{ greeting }}, {{ request.user.first_name|default:request.user.display_name }}{% endblock %}
-{% block subheading %}{% now "l, d F Y" %} · {{ current_restaurant.name }}{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block subheading %}{% now "l, d F Y" %}{% endblock %}
 {% block content %}
-{% if awaiting %}
-<div class="alert alert-amber mb-3">
-  <i data-lucide="bell-ring" class="icon-sm"></i>
-  <div><b>{{ awaiting|length }} order{{ awaiting|length|pluralize }} waiting for you.</b> Guests ordered from the QR menu or online store.</div>
-  <a class="btn btn-sm btn-dark right" href="{% url 'restaurant:orders' %}?tab=awaiting">Review now</a>
-</div>
-{% endif %}
+<section class="welcome">
+  <div>
+    <h2>{{ greeting }}, {{ request.user.first_name|default:request.user.display_name }} 👋</h2>
+    <p>{{ stats.running }} order{{ stats.running|pluralize }} running{% if awaiting %} · <b>{{ awaiting|length }} waiting for your OK</b>{% endif %} · {{ stats.completed }} completed today</p>
+  </div>
+  <div class="w-actions">
+    {% if awaiting %}<a class="btn btn-lime" href="{% url 'restaurant:orders' %}?tab=awaiting"><i data-lucide="bell-ring" class="icon-sm"></i>Review {{ awaiting|length }} order{{ awaiting|length|pluralize }}</a>{% endif %}
+    {% if allowed_modules|has_module:"pos" %}<a class="btn btn-outline" href="{% url 'restaurant:pos' %}"><i data-lucide="layout-grid" class="icon-sm"></i>Open tables</a>{% endif %}
+    {% if allowed_modules|has_module:"reports" %}<a class="btn btn-outline" href="{% url 'restaurant:reports' %}"><i data-lucide="line-chart" class="icon-sm"></i>Today's report</a>{% endif %}
+  </div>
+</section>
 
-<div class="grid g-4">
-  <div class="card stat">
-    <div class="label">Today's sales <span class="ico"><i data-lucide="indian-rupee"></i></span></div>
-    <div class="value">{{ stats.sales|inr }}</div>
-    <div class="hint">Discounts {{ stats.discounts|inr }}</div>
-  </div>
-  <div class="card stat lime">
-    <div class="label">Orders completed <span class="ico"><i data-lucide="check-check"></i></span></div>
-    <div class="value">{{ stats.completed }}</div>
-    <div class="hint">{{ stats.guests }} guests · {{ stats.cancelled }} cancelled</div>
-  </div>
-  <div class="card stat violet">
-    <div class="label">Avg. order value <span class="ico"><i data-lucide="receipt"></i></span></div>
-    <div class="value">{{ stats.avg|inr }}</div>
-    <div class="hint">per completed order</div>
-  </div>
-  <div class="card stat blue">
-    <div class="label">Running now <span class="ico"><i data-lucide="flame"></i></span></div>
-    <div class="value">{{ stats.running }}</div>
-    <div class="hint">open orders across tables</div>
-  </div>
+<div class="kpis mt-3">
+  <div class="kpi"><span class="k-ico"><i data-lucide="indian-rupee"></i></span><div><small>Today's sales</small><b>{{ stats.sales|inr }}</b><span>Discounts {{ stats.discounts|inr }}</span></div></div>
+  <div class="kpi"><span class="k-ico cyan"><i data-lucide="check-check"></i></span><div><small>Orders completed</small><b>{{ stats.completed }}</b><span>{{ stats.guests }} guests · {{ stats.cancelled }} cancelled</span></div></div>
+  <div class="kpi"><span class="k-ico violet"><i data-lucide="receipt"></i></span><div><small>Avg. order value</small><b>{{ stats.avg|inr }}</b><span>per completed order</span></div></div>
+  <div class="kpi"><span class="k-ico amber"><i data-lucide="flame"></i></span><div><small>Running now</small><b>{{ stats.running }}</b><span>open orders on the floor</span></div></div>
+</div>
+
+<div class="shortcuts mt-3">
+  {% if allowed_modules|has_module:"pos" %}<a class="shortcut" href="{% url 'restaurant:pos' %}"><span class="qi"><i data-lucide="monitor-smartphone"></i></span>POS<small>Tables & billing</small></a>{% endif %}
+  {% if allowed_modules|has_module:"kitchen" %}<a class="shortcut" href="{% url 'restaurant:kitchen' %}"><span class="qi"><i data-lucide="chef-hat"></i></span>Kitchen<small>Live tickets</small></a>{% endif %}
+  {% if allowed_modules|has_module:"menu" %}<a class="shortcut" href="{% url 'restaurant:menu' %}"><span class="qi"><i data-lucide="utensils-crossed"></i></span>Menu<small>Items & prices</small></a>{% endif %}
+  {% if allowed_modules|has_module:"tables" %}<a class="shortcut" href="{% url 'restaurant:tables_qr' %}"><span class="qi"><i data-lucide="qr-code"></i></span>Table QRs<small>Print & share</small></a>{% endif %}
+  <a class="shortcut" href="{% url 'storefront:store' current_restaurant.slug %}" target="_blank" rel="noopener"><span class="qi"><i data-lucide="globe"></i></span>Online store<small>Your ordering site</small></a>
+  {% if allowed_modules|has_module:"bills" %}<a class="shortcut" href="{% url 'restaurant:bills' %}"><span class="qi"><i data-lucide="receipt-text"></i></span>Bills<small>Find & reprint</small></a>{% elif allowed_modules|has_module:"reports" %}<a class="shortcut" href="{% url 'restaurant:reports' %}"><span class="qi"><i data-lucide="bar-chart-3"></i></span>Reports<small>Sales & items</small></a>{% endif %}
 </div>
 
 <div class="grid g-main mt-3">
   <div class="card">
-    <div class="card-head"><h3>Live orders</h3>{% if allowed_modules|has_module:"live_orders" %}<a class="right card-link" href="{% url 'restaurant:live_orders' %}">View all</a>{% endif %}</div>
+    <div class="card-head"><h3>Live orders</h3><span class="pill">{{ live_orders|length }}</span>{% if allowed_modules|has_module:"live_orders" %}<a class="right card-link" href="{% url 'restaurant:live_orders' %}">Open live board →</a>{% endif %}</div>
     {% if live_orders %}
-    <div class="table-wrap"><table class="table">
-      <tbody>
+    <div class="order-grid">
       {% for o in live_orders %}
-        <tr style="cursor:pointer" onclick="location.href='{% if allowed_modules|has_module:'pos' %}{% url 'restaurant:pos_order' o.pk %}{% else %}{% url 'restaurant:order_detail' o.pk %}{% endif %}'">
-          <td><span class="t-title">#{{ o.number }}</span><div class="t-sub">{{ o.get_source_display }}</div></td>
-          <td>{{ o.place_label }}</td>
-          <td>{% badge o.status o.get_status_display %}</td>
-          <td class="muted nowrap"><i data-lucide="clock" class="icon-sm" style="vertical-align:-3px"></i> {{ o.age_display }}</td>
-          <td class="text-right strong num">{{ o.total|inr }}</td>
-        </tr>
+      <a class="order-card" href="{% if allowed_modules|has_module:'pos' %}{% url 'restaurant:pos_order' o.pk %}{% else %}{% url 'restaurant:order_detail' o.pk %}{% endif %}">
+        <div class="row"><b style="font-size:16px">{{ o.place_label }}</b><span class="right">{% badge o.status o.get_status_display %}</span></div>
+        <div class="muted small mt-1">#{{ o.number }} · {{ o.get_source_display }}</div>
+        <div class="row mt-2"><span class="muted small"><i data-lucide="clock" class="icon-sm" style="vertical-align:-3px"></i> {{ o.age_display }}</span><b class="right num">{{ o.total|inr }}</b></div>
+      </a>
       {% endfor %}
-      </tbody>
-    </table></div>
+    </div>
     {% else %}
-      <div class="empty"><div class="em-ico"><i data-lucide="coffee"></i></div><b>No orders running</b>New orders from POS, QR and online show up here instantly.</div>
+      <div class="empty"><div class="em-ico"><i data-lucide="coffee"></i></div><b>No orders running</b>New orders from POS, QR and online appear here instantly.</div>
     {% endif %}
   </div>
 
   <div class="stack">
     <div class="card">
-      <div class="card-head"><h3>Quick actions</h3></div>
-      <div class="card-body">
-        <div class="quick-grid">
-          {% if allowed_modules|has_module:"pos" %}<a class="quick" href="{% url 'restaurant:pos' %}"><span class="qi"><i data-lucide="monitor-smartphone" class="icon-sm"></i></span>POS</a>{% endif %}
-          {% if allowed_modules|has_module:"kitchen" %}<a class="quick" href="{% url 'restaurant:kitchen' %}"><span class="qi"><i data-lucide="chef-hat" class="icon-sm"></i></span>Kitchen</a>{% endif %}
-          {% if allowed_modules|has_module:"menu" %}<a class="quick" href="{% url 'restaurant:menu' %}"><span class="qi"><i data-lucide="utensils-crossed" class="icon-sm"></i></span>Menu</a>{% endif %}
-          {% if allowed_modules|has_module:"tables" %}<a class="quick" href="{% url 'restaurant:tables_qr' %}"><span class="qi"><i data-lucide="qr-code" class="icon-sm"></i></span>Table QRs</a>{% endif %}
-          <a class="quick" href="{% url 'storefront:store' current_restaurant.slug %}" target="_blank" rel="noopener"><span class="qi"><i data-lucide="globe" class="icon-sm"></i></span>Online store</a>
-          {% if allowed_modules|has_module:"reports" %}<a class="quick" href="{% url 'restaurant:reports' %}"><span class="qi"><i data-lucide="bar-chart-3" class="icon-sm"></i></span>Reports</a>{% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="card-head"><h3>Top sellers today</h3></div>
-      <div class="card-body">
-        {% if top_sellers %}
-        <div class="bar-list">
-          {% with top=top_sellers.0.qty %}
-          {% for t in top_sellers %}
-          <div class="bar-row"><span class="strong">{{ t.name }}</span><span class="muted small">{{ t.qty }} sold · {{ t.amount|inr }}</span><div class="bar"><span style="width:{% widthratio t.qty top 100 %}%"></span></div></div>
-          {% endfor %}
-          {% endwith %}
-        </div>
-        {% else %}<p class="muted mb-0">No sales yet today.</p>{% endif %}
+      <div class="card-body" style="padding-top:6px;padding-bottom:6px">
+        {% for t in top_sellers %}
+        <div class="rank"><span class="r-n">{{ forloop.counter }}</span><div><b>{{ t.name }}</b><div class="muted tiny">{{ t.qty }} sold</div></div><b class="right num">{{ t.amount|inr }}</b></div>
+        {% empty %}<p class="muted" style="padding:12px 0">No sales yet today.</p>{% endfor %}
       </div>
     </div>
 
     {% if insights %}
     <div class="card">
-      <div class="card-head"><h3><i data-lucide="sparkles" class="icon-sm" style="color:var(--lime-600);vertical-align:-3px"></i> Smart insights</h3></div>
+      <div class="card-head"><h3><i data-lucide="sparkles" class="icon-sm" style="color:var(--brand-600);vertical-align:-3px"></i> Smart insights</h3></div>
       <div class="card-body" style="padding-top:6px">
         {% for tip in insights %}<div class="insight"><span class="bullet"><i data-lucide="lightbulb" class="icon-sm"></i></span><span>{{ tip }}</span></div>{% endfor %}
       </div>

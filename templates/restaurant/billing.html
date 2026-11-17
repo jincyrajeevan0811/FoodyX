@@ -10,7 +10,7 @@
     <div><div class="muted small">Current plan</div><div style="font-size:26px;font-weight:800">{{ sub.plan.name }}</div></div>
     <div><div class="muted small">Status</div><div style="font-size:18px;font-weight:700">{% if sub.is_trial and sub.is_live %}Free trial{% elif sub.is_live %}Active{% else %}Expired{% endif %}</div></div>
     <div><div class="muted small">{% if sub.is_live %}{% if sub.is_trial %}Trial ends{% else %}Renews on{% endif %}{% else %}Ended on{% endif %}</div><div style="font-size:18px;font-weight:700">{{ sub.current_period_end|date:"d M Y" }}</div></div>
-    {% if sub.is_live %}<div class="right"><span class="pill" style="background:rgba(163,230,53,.18);color:var(--lime)">{{ sub.days_left }} day{{ sub.days_left|pluralize }} left</span></div>{% endif %}
+    {% if sub.is_live %}<div class="right"><span class="pill" style="background:rgba(34,211,238,.2);color:var(--lime)">{{ sub.days_left }} day{{ sub.days_left|pluralize }} left</span></div>{% endif %}
   </div>
 </div>
 {% if not sub.is_live %}<div class="alert alert-red mb-3"><i data-lucide="alert-octagon" class="icon-sm"></i><div>Your plan has expired. Choose a plan below to continue using {{ site_name }}. Your data is safe.</div></div>{% endif %}

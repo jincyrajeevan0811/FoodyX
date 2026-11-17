@@ -29,7 +29,7 @@
     description: "Order #{{ order.number|escapejs }}",
     order_id: "{{ order.razorpay_order_id|escapejs }}",
     prefill: { name: "{{ order.customer_name|escapejs }}", contact: "{{ order.customer_phone|escapejs }}" },
-    theme: { color: "#059669" },
+    theme: { color: "#4f46e5" },
     handler: function (resp) {
       f.razorpay_order_id.value = resp.razorpay_order_id;
       f.razorpay_payment_id.value = resp.razorpay_payment_id;

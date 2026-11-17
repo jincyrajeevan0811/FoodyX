@@ -1,38 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Start your free trial · {{ site_name }}{% endblock %}
 {% block body %}
-<div class="auth">
-  <div class="auth-art">
-    <a class="brand" href="{% url 'core:landing' %}" style="padding:0">{% include "partials/brand.html" %}</a>
-    <h2>Your restaurant,<br>running <em>smoother</em><br>from today.</h2>
-    <p>Create your account in a minute. We set up your first tables and menu sections so you can bill right away.</p>
-    <ul class="auth-points">
-      <li><i data-lucide="gift"></i>Free trial — no card needed</li>
-      <li><i data-lucide="qr-code"></i>Table QR codes ready to print</li>
-      <li><i data-lucide="headphones"></i>Friendly onboarding support</li>
-    </ul>
-  </div>
-  <div class="auth-form">
-    <div class="auth-box" style="width:min(520px,100%)">
-      <h1>Start your free trial</h1>
-      <p class="lead">Already have an account? <a href="{% url 'core:login' %}" class="strong">Sign in</a></p>
-      <form method="post" class="stack" style="gap:14px" novalidate>
-        {% csrf_token %}
-        {% if form.non_field_errors %}<div class="alert alert-red">{{ form.non_field_errors|join:" " }}</div>{% endif %}
-        <div class="form-grid">
-          {% include "partials/field.html" with field=form.restaurant_name %}
-          {% include "partials/field.html" with field=form.business_type %}
-          {% include "partials/field.html" with field=form.owner_name %}
-          {% include "partials/field.html" with field=form.city %}
-          {% include "partials/field.html" with field=form.phone %}
-          {% include "partials/field.html" with field=form.email %}
-          {% include "partials/field.html" with field=form.password %}
-          {% include "partials/field.html" with field=form.plan %}
-        </div>
-        {% include "partials/field.html" with field=form.agree %}
-        <button class="btn btn-primary btn-lg btn-block">Create my restaurant <i data-lucide="arrow-right" class="icon-sm"></i></button>
-      </form>
+<div class="auth-page">
+  <div class="auth-card wide">
+    <a class="brand" href="{% url 'core:landing' %}">{% include "partials/brand.html" %}</a>
+    <h1>Create your restaurant</h1>
+    <p class="lead">Takes about a minute. We'll set up your first tables and menu sections for you.</p>
+    <div class="auth-perks">
+      <span class="pill"><i data-lucide="gift" class="icon-sm"></i>Free trial</span>
+      <span class="pill"><i data-lucide="credit-card" class="icon-sm"></i>No card needed</span>
+      <span class="pill"><i data-lucide="qr-code" class="icon-sm"></i>QR codes ready to print</span>
     </div>
+    <form method="post" class="stack" style="gap:14px" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-red">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+      <div class="form-grid">
+        {% include "partials/field.html" with field=form.restaurant_name %}
+        {% include "partials/field.html" with field=form.business_type %}
+        {% include "partials/field.html" with field=form.owner_name %}
+        {% include "partials/field.html" with field=form.city %}
+        {% include "partials/field.html" with field=form.phone %}
+        {% include "partials/field.html" with field=form.email %}
+        {% include "partials/field.html" with field=form.password %}
+        {% include "partials/field.html" with field=form.plan %}
+      </div>
+      {% include "partials/field.html" with field=form.agree %}
+      <button class="btn btn-primary btn-lg btn-block">Create my restaurant <i data-lucide="arrow-right" class="icon-sm"></i></button>
+    </form>
   </div>
+  <div class="auth-foot">Already have an account? <a href="{% url 'core:login' %}" class="strong">Sign in</a> · <a href="{% url 'core:landing' %}">Back to website</a></div>
 </div>
 {% endblock %}

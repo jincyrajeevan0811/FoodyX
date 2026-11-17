@@ -99,6 +99,7 @@ def overview(request):
         "collected_all": collected_all,
         "checklist": checklist,
         "checklist_done": sum(1 for c in checklist if c[1]),
+        "checklist_left": sum(1 for c in checklist if not c[1]),
         "expiring": expiring,
         "orders_today": todays_orders.count(),
         "sales_today": completed_today,

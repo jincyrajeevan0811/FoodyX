@@ -40,7 +40,7 @@
     order_id: "{{ rp_order.id|escapejs }}",
     prefill: { name: "{{ request.user.display_name|escapejs }}", email: "{{ request.user.email|escapejs }}", contact: "{{ request.user.phone|default:''|escapejs }}" },
     notes: { restaurant: "{{ current_restaurant.name|escapejs }}" },
-    theme: { color: "#059669" },
+    theme: { color: "#4f46e5" },
     handler: function (resp) {
       f.razorpay_order_id.value = resp.razorpay_order_id;
       f.razorpay_payment_id.value = resp.razorpay_payment_id;
