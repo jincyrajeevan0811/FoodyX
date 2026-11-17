@@ -26,11 +26,14 @@ python -m venv .venv
 source .venv/bin/activate           # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python manage.py makemigrations core saas restaurant
+python manage.py makemigrations
 python manage.py migrate
 python manage.py seed_demo          # plans, super admin and a demo restaurant
 python manage.py runserver
 ```
+
+> If you see `no such table: ...`, the migrations have not been applied. Delete `db.sqlite3`
+> (if it exists) and run `makemigrations`, `migrate` and `seed_demo` again.
 
 Open http://127.0.0.1:8000/
 
