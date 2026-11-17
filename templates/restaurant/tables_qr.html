@@ -7,6 +7,14 @@
   <a class="btn btn-outline" href="{% url 'restaurant:tables' %}">Back to tables</a>
 </div>
 <p class="center muted no-print">Guests scan the code with their phone camera, browse the menu and order — linked to that table.</p>
+{% if local_mode %}
+<div class="alert alert-blue no-print" style="max-width:820px;margin:0 auto 18px">
+  <i data-lucide="wifi" class="icon-sm"></i>
+  <div><b>Testing on your local network.</b> These codes point to <code>{{ base }}</code> so a phone on the same Wi-Fi can open them.
+  Start the server with <code>python manage.py runlan</code> (or <code>python manage.py runserver 0.0.0.0:8000</code>) — plain <code>runserver</code> only accepts this computer.
+  When you go live, set the <b>Site address</b> in Platform settings and the codes will use it.</div>
+</div>
+{% endif %}
 <div class="qr-sheet" style="max-width:1100px;margin:0 auto">
   {% for t in tables %}
   <div class="qr-card">
@@ -15,6 +23,7 @@
     <div class="qr" data-url="{{ base }}{% url 'storefront:table_menu' t.qr_token %}"></div>
     <h3>{{ t.name }}</h3>
     <div class="small" style="font-weight:600">Scan to see the menu & order</div>
+    <div class="no-print" style="font-size:10.5px;color:#64748b;margin-top:6px;word-break:break-all"><a href="{{ base }}{% url 'storefront:table_menu' t.qr_token %}" target="_blank" rel="noopener">{{ base }}{% url 'storefront:table_menu' t.qr_token %}</a></div>
   </div>
   {% empty %}
   <div class="card"><div class="empty"><b>No tables yet</b></div></div>

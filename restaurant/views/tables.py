@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from core.permissions import restaurant_required
-from core.utils import log_activity
+from core.utils import is_local_request, log_activity, public_base_url
 
 from ..forms import AreaForm, TableForm
 from ..models import Area, Table
@@ -104,5 +104,7 @@ def area_edit(request, pk=None):
 def tables_qr(request):
     r = request.restaurant
     tables = Table.objects.filter(restaurant=r).select_related("area")
-    base = request.build_absolute_uri("/")[:-1]
-    return render(request, "restaurant/tables_qr.html", {"tables": tables, "base": base})
+    base = public_base_url(request)
+    return render(request, "restaurant/tables_qr.html", {
+        "tables": tables, "base": base, "local_mode": is_local_request(request),
+    })

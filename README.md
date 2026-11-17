@@ -37,6 +37,20 @@ python manage.py runserver
 
 Open http://127.0.0.1:8000/
 
+### Testing QR codes and the online store on a phone
+
+`127.0.0.1` only works on the computer itself, so a phone that scans a QR code pointing there shows
+"refused to connect". To test from a phone on the same Wi-Fi, start the server with:
+
+```bash
+python manage.py runlan        # same as: python manage.py runserver 0.0.0.0:8000
+```
+
+It prints your network address (e.g. `http://192.168.1.20:8000/`). Table QR codes and the store
+link automatically use that address while you are testing locally. If the phone still can't
+connect, allow Python through Windows Defender Firewall for **Private networks**. In production,
+set **Platform settings → Site address** and every QR code uses your real domain.
+
 ### Demo logins (created by `seed_demo`)
 
 | Role | Login | Password | Lands on |

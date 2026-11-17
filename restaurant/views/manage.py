@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from core.permissions import restaurant_required
-from core.utils import log_activity
+from core.utils import log_activity, public_base_url
 
 from ..forms import CouponForm, CustomerForm, InventoryItemForm, SeoForm, StockMovementForm
 from ..models import Coupon, Customer, InventoryItem, Order, OrderItem, StockMovement
@@ -231,7 +231,7 @@ def marketing(request):
         seo_form.save()
         messages.success(request, "Online store SEO saved.")
         return redirect("restaurant:marketing")
-    base = request.build_absolute_uri("/")[:-1]
+    base = public_base_url(request)
     return render(request, "restaurant/marketing.html", {
         "coupons": Coupon.objects.filter(restaurant=r),
         "coupon_form": CouponForm(),
