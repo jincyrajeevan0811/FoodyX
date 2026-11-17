@@ -72,9 +72,9 @@ def overview(request):
     six_months = (month_start - timedelta(days=160)).replace(day=1)
     by_month = (
         paid.filter(paid_at__date__gte=six_months)
-        .annotate(m=TruncMonth("paid_at")).values("m").annotate(total=Sum("total")).order_by("m")
+        .annotate(m=TruncMonth("paid_at")).values("m").annotate(amt=Sum("total")).order_by("m")
     )
-    trend_map = {row["m"].strftime("%b %Y"): float(row["total"]) for row in by_month if row["m"]}
+    trend_map = {row["m"].strftime("%b %Y"): float(row["amt"]) for row in by_month if row["m"]}
     labels, values = [], []
     cursor = six_months
     for _ in range(6):
