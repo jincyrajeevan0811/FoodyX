@@ -26,7 +26,7 @@ class LoginForm(forms.Form):
 
 
 class SignupForm(forms.Form):
-    restaurant_name = forms.CharField(max_length=120, widget=forms.TextInput(attrs={"placeholder": "e.g. Spice Garden"}))
+    restaurant_name = forms.CharField(max_length=120, widget=forms.TextInput(attrs={"placeholder": "e.g. FoodyX Kitchen"}))
     business_type = forms.ChoiceField(choices=[])
     city = forms.CharField(max_length=60, required=False)
     owner_name = forms.CharField(max_length=120, label="Your name")

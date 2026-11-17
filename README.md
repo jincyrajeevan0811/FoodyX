@@ -65,7 +65,7 @@ set **Platform settings → Site address** and every QR code uses your real doma
 | Store keeper | `9000000009` | `demo123` | Inventory |
 | Admin (restaurant) | `9000000010` | `demo123` | |
 
-The demo online store is at `/s/spice-garden/`. Table QR links are on **Tables & Rooms → Print QR codes**.
+The demo restaurant is called **FoodyX**. Its online store is at `/s/foodyx/`. Table QR links are on **Tables & Rooms → Print QR codes**.
 
 Run `python manage.py seed_demo --fresh` to rebuild the demo restaurant. To start with an empty platform,
 skip `seed_demo` and run `python manage.py createsuperuser` — the superuser automatically becomes a

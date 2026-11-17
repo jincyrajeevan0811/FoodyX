@@ -88,7 +88,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         rng = random.Random(42)
         if opts["fresh"]:
-            Restaurant.objects.filter(slug__in=["spice-garden", "cafe-mocha"]).delete()
+            Restaurant.objects.filter(slug__in=["foodyx", "spice-garden", "cafe-mocha"]).delete()
             User.objects.filter(phone__startswith="90000000").delete()
 
         ps = PlatformSettings.load()
@@ -113,28 +113,28 @@ class Command(BaseCommand):
         else:
             admin = User.objects.get(username="admin")
 
-        if Restaurant.objects.filter(slug="spice-garden").exists():
+        if Restaurant.objects.filter(slug="foodyx").exists():
             self.stdout.write("Demo restaurant already exists — run with --fresh to rebuild it.")
             return
 
         # ---------------------------------------------------------- restaurant
         r = Restaurant.objects.create(
-            name="Spice Garden", slug="spice-garden", business_type="restaurant", city="Kochi",
-            tagline="Malabar flavours · since 2012", phone="9000000001", email="hello@spicegarden.in",
+            name="FoodyX", slug="foodyx", business_type="restaurant", city="Kochi",
+            tagline="Malabar flavours · since 2012", phone="9000000001", email="hello@foodyx.app",
             address="MG Road, Ernakulam, Kochi 682016", opening_hours="7:00 AM – 11:00 PM",
             service_charge_percent=Decimal("0"), charge_gst=True, gst_percent=Decimal("5"),
             delivery_fee=Decimal("30"), min_order_amount=Decimal("150"),
-            seo_title="Spice Garden Kochi — order Malabar food online",
+            seo_title="FoodyX Kochi — order Malabar food online",
             seo_description="Biriyani, appam, fish curry and more. Order online for takeaway or delivery.",
         )
         Subscription.objects.create(restaurant=r, plan=plans["Medium"], status="active", billing_cycle="monthly",
                                     started_at=timezone.now() - timedelta(days=20),
                                     current_period_end=timezone.now() + timedelta(days=10))
-        owner = User.objects.create_user("dalvy", "owner@spicegarden.in", "demo123", first_name="Dalvy",
+        owner = User.objects.create_user("dalvy", "owner@foodyx.app", "demo123", first_name="Dalvy",
                                          last_name="Mathew", phone="9000000001", role="owner", restaurant=r)
         staff = {"owner": [owner]}
         for i, (first, last, role) in enumerate(STAFF, start=2):
-            u = User.objects.create_user(f"{first.lower()}.sg", f"{first.lower()}@spicegarden.in", "demo123",
+            u = User.objects.create_user(f"{first.lower()}.fx", f"{first.lower()}@foodyx.app", "demo123",
                                          first_name=first, last_name=last, phone=f"900000000{i}" if i < 10 else f"90000000{i}",
                                          role=role, restaurant=r, pin=f"{1000 + i}", is_online=(role == "rider"))
             staff.setdefault(role, []).append(u)
@@ -286,7 +286,7 @@ class Command(BaseCommand):
                                  phone="9000000020", role="owner", restaurant=cafe)
         bootstrap_restaurant(cafe)
 
-        ActivityLog.objects.create(actor=admin, restaurant=r, action="Restaurant onboarded", detail="Spice Garden on Medium")
+        ActivityLog.objects.create(actor=admin, restaurant=r, action="Restaurant onboarded", detail="FoodyX on Medium")
         ActivityLog.objects.create(actor=admin, restaurant=cafe, action="Restaurant onboarded", detail="Cafe Mocha on Average trial")
 
         self.stdout.write(self.style.SUCCESS("Demo data ready."))
@@ -296,4 +296,4 @@ class Command(BaseCommand):
         self.stdout.write("  Cashier       → 9000000005 / demo123")
         self.stdout.write("  Kitchen       → 9000000006 / demo123")
         self.stdout.write("  Rider         → 9000000007 / demo123")
-        self.stdout.write("  Online store  → /s/spice-garden/")
+        self.stdout.write("  Online store  → /s/foodyx/")
