@@ -128,6 +128,35 @@ Until SMTP is saved in Platform settings, emails (welcome mails, password resets
 
 ---
 
+## Deploy to Vercel
+
+The repo includes `vercel.json`, WhiteNoise for static files and `DATABASE_URL` support.
+Vercel runs Django as a serverless function, so it needs an external **PostgreSQL** database
+(SQLite files are not kept between requests).
+
+1. **Commit your migrations** (generated locally by `makemigrations`):
+   `git add core/migrations saas/migrations restaurant/migrations && git commit -m "Add migrations" && git push`
+2. **Create a free Postgres database**, e.g. on [Neon](https://neon.tech). Copy its connection string
+   (`postgresql://user:pass@host/db?sslmode=require`).
+3. **Create the tables and demo data** from your computer, pointing at that database:
+   ```bash
+   pip install -r requirements.txt
+   # Windows PowerShell:  $env:DATABASE_URL="postgresql://..."
+   # macOS / Linux:       export DATABASE_URL="postgresql://..."
+   python manage.py migrate
+   python manage.py seed_demo
+   ```
+4. **Import the GitHub repo in Vercel** (vercel.com → Add New → Project → FoodyX). Framework preset: *Other*.
+5. **Add environment variables** in the Vercel project before deploying:
+
+   | Name | Value |
+   |------|-------|
+   | `DATABASE_URL` | the Postgres connection string |
+   | `FOODYX_SECRET_KEY` | a long random string |
+
+6. **Deploy.** Your site is live at `https://<project-name>.vercel.app`. Then sign in as `admin` and set
+   **Platform settings → Site address** to that URL so QR codes and emails use it.
+
 ## Production checklist
 
 Set these environment variables:

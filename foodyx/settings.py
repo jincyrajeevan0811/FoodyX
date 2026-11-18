@@ -8,11 +8,20 @@ SECRET_KEY = os.environ.get(
     "FOODYX_SECRET_KEY",
     "dev-only-change-me-7f3c1e9b2a4d4b6c8e0f1a2b3c4d5e6f",
 )
-DEBUG = os.environ.get("FOODYX_DEBUG", "1") == "1"
+# Vercel sets VERCEL=1 in its build and runtime environment.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
+DEBUG = os.environ.get("FOODYX_DEBUG", "0" if ON_VERCEL else "1") == "1"
 ALLOWED_HOSTS = [h for h in os.environ.get("FOODYX_ALLOWED_HOSTS", "*").split(",") if h]
 CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("FOODYX_CSRF_TRUSTED_ORIGINS", "").split(",") if o
 ]
+if ON_VERCEL:
+    CSRF_TRUSTED_ORIGINS.append("https://*.vercel.app")
+    # Vercel terminates HTTPS in front of the app.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -30,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -60,12 +70,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "foodyx.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Local development uses SQLite. In production (Vercel) set DATABASE_URL to a
+# PostgreSQL database, e.g. Neon or Vercel Postgres — serverless functions
+# cannot keep a SQLite file.
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+if DATABASE_URL:
+    import dj_database_url
+
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=0, conn_health_checks=True)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 AUTH_USER_MODEL = "core.User"
 AUTHENTICATION_BACKENDS = ["core.backends.PhoneEmailUsernameBackend"]
@@ -86,6 +105,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# WhiteNoise serves /static/ in production straight from the app folders,
+# so no separate collectstatic step is needed on Vercel.
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
