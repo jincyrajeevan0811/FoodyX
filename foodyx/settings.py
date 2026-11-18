@@ -74,11 +74,24 @@ WSGI_APPLICATION = "foodyx.wsgi.application"
 # Local development uses SQLite. In production (Vercel) set DATABASE_URL to a
 # PostgreSQL database, e.g. Neon or Vercel Postgres — serverless functions
 # cannot keep a SQLite file.
-DATABASE_URL = (
-    os.environ.get("DATABASE_URL")
-    or os.environ.get("POSTGRES_URL")
-    or os.environ.get("STORAGE_URL")  # Vercel's Neon integration with the default "STORAGE" prefix
-)
+def _find_database_url():
+    """DATABASE_URL, or whatever name Vercel's Neon integration used.
+
+    The integration names variables after the "Custom prefix" chosen when it
+    was connected (DATABASE_URL, STORAGE_URL, FOODYX_URL, …), so fall back to
+    any *_URL variable that holds a Postgres address (pooled one preferred).
+    """
+    for name in ("DATABASE_URL", "POSTGRES_URL", "STORAGE_URL"):
+        if os.environ.get(name):
+            return os.environ[name]
+    found = sorted(
+        (("UNPOOLED" in k.upper(), k), v) for k, v in os.environ.items()
+        if k.upper().endswith(("_URL", "_URL_UNPOOLED")) and v.startswith(("postgres://", "postgresql://"))
+    )
+    return found[0][1] if found else None
+
+
+DATABASE_URL = _find_database_url()
 if DATABASE_URL:
     import dj_database_url
 

@@ -67,8 +67,18 @@ def classify(exc):
     return CONNECTION
 
 
+def _visible_db_vars():
+    """Names (never values) of variables that look database-related."""
+    import os
+
+    keys = sorted(k for k in os.environ if any(t in k.upper() for t in ("DATABASE", "POSTGRES", "_URL", "PGHOST", "NEON")))
+    return ", ".join(keys[:20]) or "none"
+
+
 def setup_page(exc):
     title, intro, steps = classify(exc)
+    if (title, intro, steps) == NO_DB:
+        steps = steps + [f"Database-related variables this deployment can see: <code>{escape(_visible_db_vars())}</code>"]
     first_line = str(exc).strip().splitlines()[0][:160] if str(exc).strip() else exc.__class__.__name__
     html = PAGE.format(
         title=title, intro=intro, steps="".join(f"<li>{s}</li>" for s in steps),
