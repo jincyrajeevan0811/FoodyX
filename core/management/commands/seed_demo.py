@@ -113,8 +113,13 @@ class Command(BaseCommand):
         else:
             admin = User.objects.get(username="admin")
 
-        if Restaurant.objects.filter(slug="foodyx").exists():
-            self.stdout.write("Demo restaurant already exists — run with --fresh to rebuild it.")
+        existing = Restaurant.objects.filter(slug__in=["foodyx", "spice-garden"]).first()
+        if existing or User.objects.filter(phone__startswith="90000000").exists():
+            name = existing.name if existing else "an older demo"
+            self.stdout.write(self.style.WARNING(
+                f"Demo data already exists ({name}). Nothing was changed.\n"
+                "  Run `python manage.py seed_demo --fresh` to delete the demo restaurants and build them again."
+            ))
             return
 
         # ---------------------------------------------------------- restaurant
