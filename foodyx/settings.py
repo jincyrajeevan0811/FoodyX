@@ -42,6 +42,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "core.setup_check.SetupCheckMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -118,3 +119,17 @@ MESSAGE_TAGS = {40: "error"}
 # Platform settings take over automatically once configured.
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "FoodyX <no-reply@foodyx.app>"
+
+
+# Print errors (with tracebacks) to the console so they show up in
+# `runserver` output and in Vercel → Deployments → Logs.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+        "foodyx.setup": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+}
