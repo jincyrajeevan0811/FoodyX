@@ -51,6 +51,7 @@
             <i data-lucide="chevron-down" class="icon-sm muted"></i>
           </button>
           <div class="dropdown-menu" style="min-width:200px">
+            <a class="dd-item" href="{% url 'core:profile' %}"><i data-lucide="user-round" class="icon-sm"></i>My profile</a>
             <form method="post" action="{% url 'core:logout' %}">{% csrf_token %}
               <button class="dd-item w-100" style="border:0;background:none;cursor:pointer;font:inherit"><i data-lucide="log-out" class="icon-sm"></i>Sign out</button>
             </form>

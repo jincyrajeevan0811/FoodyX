@@ -81,6 +81,7 @@
           </button>
           <div class="dropdown-menu" style="min-width:220px">
             <div class="dd-head">{{ current_restaurant.name }}</div>
+            <a class="dd-item" href="{% url 'core:profile' %}"><i data-lucide="user-round" class="icon-sm"></i>My profile</a>
             {% if allowed_modules|has_module:"settings" %}<a class="dd-item" href="{% url 'restaurant:settings' %}"><i data-lucide="settings" class="icon-sm"></i>Settings</a>{% endif %}
             {% if allowed_modules|has_module:"billing" %}<a class="dd-item" href="{% url 'restaurant:billing' %}"><i data-lucide="credit-card" class="icon-sm"></i>Plan & billing</a>{% endif %}
             {% if request.user.is_platform %}<a class="dd-item" href="{% url 'saas:overview' %}"><i data-lucide="shield" class="icon-sm"></i>Platform admin</a>{% endif %}

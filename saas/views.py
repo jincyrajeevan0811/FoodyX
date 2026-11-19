@@ -28,7 +28,7 @@ from restaurant.models import Order, Restaurant, RolePermission
 
 from .forms import (
     ManualPaymentForm, OnboardRestaurantForm, PlanForm, PlatformSettingsForm,
-    RestaurantEditForm, SubscriptionForm, TeamMemberForm,
+    RestaurantEditForm, SubscriptionForm, TeamMemberForm, UserAdminForm,
 )
 from .models import ActivityLog, Plan, PlatformPayment, PlatformSettings, Subscription
 from .services import onboard_restaurant
@@ -392,6 +392,27 @@ def users(request):
         qs = qs.filter(role=role)
     page = Paginator(qs.order_by("-date_joined"), 30).get_page(request.GET.get("page"))
     return render(request, "platform/users.html", {"page": page, "q": q, "role": role, "roles": ROLE_CHOICES})
+
+
+@platform_required("manage")
+def user_edit(request, pk):
+    member = get_object_or_404(User.objects.select_related("restaurant"), pk=pk)
+    if member.is_superuser and not request.user.is_superuser:
+        messages.error(request, "Only a superuser can edit another superuser.")
+        return redirect("saas:users")
+    form = UserAdminForm(request.POST or None, instance=member)
+    if request.method == "POST" and form.is_valid():
+        if member == request.user and not form.cleaned_data.get("is_active"):
+            form.add_error("is_active", "You cannot switch off your own login.")
+        else:
+            user = form.save()
+            log_activity(request, "User edited", f"{user.display_name} ({user.role_label})", restaurant=user.restaurant)
+            messages.success(request, f"{user.display_name} saved.")
+            nxt = request.POST.get("next", "")
+            if nxt.startswith("/platform/"):
+                return redirect(nxt)
+            return redirect("saas:users")
+    return render(request, "platform/user_form.html", {"form": form, "member": member, "next": request.GET.get("next", "")})
 
 
 @platform_required("manage")

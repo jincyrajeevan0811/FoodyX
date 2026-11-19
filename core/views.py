@@ -1,5 +1,6 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -9,7 +10,7 @@ from restaurant.models import Restaurant
 from saas.models import Plan, PlatformSettings
 from saas.services import onboard_restaurant
 
-from .forms import LoginForm, SignupForm
+from .forms import LoginForm, ProfileForm, SignupForm
 from .modules import SINGLE_DEVICE_ROLES
 from .permissions import home_url_for
 from .utils import log_activity, send_platform_email
@@ -125,3 +126,25 @@ def signup(request):
 @login_required
 def home_redirect(request):
     return redirect(home_url_for(request.user))
+
+
+@login_required
+def profile(request):
+    """Every user can change their own name, contact details and password."""
+    user = request.user
+    action = request.POST.get("action") if request.method == "POST" else None
+    form = ProfileForm(request.POST if action == "profile" else None, instance=user, prefix="p")
+    pw_form = PasswordChangeForm(user, request.POST if action == "password" else None, prefix="pw")
+    if action == "profile" and form.is_valid():
+        form.save()
+        log_activity(request, "Profile updated", user.display_name)
+        messages.success(request, "Your details were saved.")
+        return redirect("core:profile")
+    if action == "password" and pw_form.is_valid():
+        pw_form.save()
+        update_session_auth_hash(request, pw_form.user)
+        log_activity(request, "Password changed", user.display_name)
+        messages.success(request, "Your password was changed.")
+        return redirect("core:profile")
+    layout = "layouts/platform.html" if (user.is_platform and not user.restaurant_id) else "layouts/app.html"
+    return render(request, "account/profile.html", {"form": form, "pw_form": pw_form, "layout": layout})

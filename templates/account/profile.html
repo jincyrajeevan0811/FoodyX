@@ -1,0 +1,32 @@
+{% extends layout %}
+{% block page_title %}My profile{% endblock %}
+{% block heading %}My profile{% endblock %}
+{% block subheading %}{{ request.user.role_label }}{% if request.user.restaurant %} · {{ request.user.restaurant.name }}{% endif %}{% endblock %}
+{% block content %}
+<div class="grid g-side">
+  <div class="stack">
+    <form method="post" class="card">
+      {% csrf_token %}<input type="hidden" name="action" value="profile">
+      <div class="card-head"><h3>Your details</h3></div>
+      <div class="card-body">{% include "partials/form_fields.html" with form=form %}</div>
+      <div class="form-actions"><button class="btn btn-primary"><i data-lucide="save" class="icon-sm"></i>Save details</button></div>
+    </form>
+    <form method="post" class="card">
+      {% csrf_token %}<input type="hidden" name="action" value="password">
+      <div class="card-head"><h3>Change password</h3></div>
+      <div class="card-body">{% include "partials/form_fields.html" with form=pw_form %}</div>
+      <div class="form-actions"><button class="btn btn-primary"><i data-lucide="key-round" class="icon-sm"></i>Change password</button></div>
+    </form>
+  </div>
+  <div class="card card-pad">
+    <div class="row"><span class="avatar lg">{{ request.user.initials }}</span><div><b style="font-size:16px">{{ request.user.display_name }}</b><div class="muted small">{{ request.user.role_label }}</div></div></div>
+    <hr>
+    <dl class="kv">
+      <dt>Username</dt><dd>{{ request.user.username }}</dd>
+      <dt>Sign in with</dt><dd>{% if request.user.phone %}{{ request.user.phone }}{% endif %}{% if request.user.phone and request.user.email %} or {% endif %}{{ request.user.email }}{% if not request.user.phone and not request.user.email %}{{ request.user.username }}{% endif %}</dd>
+      <dt>Last sign-in</dt><dd>{{ request.user.last_login|date:"d M Y, h:i A"|default:"—" }}</dd>
+    </dl>
+    <p class="muted small mt-2 mb-0">Your role is set by {% if request.user.restaurant %}the restaurant owner in Staff & Roles{% else %}a super admin in Team & roles{% endif %}.</p>
+  </div>
+</div>
+{% endblock %}

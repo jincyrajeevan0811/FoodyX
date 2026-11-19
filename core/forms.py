@@ -59,3 +59,39 @@ class SignupForm(forms.Form):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("This email already has a FoodyX login.")
         return email
+
+
+def _clean_unique_phone(form, phone):
+    phone = "".join(ch for ch in (phone or "") if ch.isdigit() or ch == "+")
+    if phone and User.objects.filter(phone=phone).exclude(pk=form.instance.pk).exists():
+        raise forms.ValidationError("This mobile number is already used by another login.")
+    return phone or None
+
+
+def _clean_unique_email(form, email):
+    email = (email or "").strip().lower()
+    if email and User.objects.filter(email__iexact=email).exclude(pk=form.instance.pk).exists():
+        raise forms.ValidationError("This email is already used by another login.")
+    return email
+
+
+class ProfileForm(forms.ModelForm):
+    """What every user can change about themselves."""
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email", "phone"]
+        labels = {"first_name": "First name", "last_name": "Last name", "phone": "Mobile number"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].required = True
+
+    def clean_phone(self):
+        phone = _clean_unique_phone(self, self.cleaned_data.get("phone"))
+        if not phone and self.instance.restaurant_id:
+            raise forms.ValidationError("Restaurant staff sign in with their mobile number, so it can't be empty.")
+        return phone
+
+    def clean_email(self):
+        return _clean_unique_email(self, self.cleaned_data.get("email"))

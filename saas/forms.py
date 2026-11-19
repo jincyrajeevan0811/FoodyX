@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from core.modules import PLAN_FEATURES, PLATFORM_ROLE_CHOICES
+from core.forms import _clean_unique_email, _clean_unique_phone
+from core.modules import PLAN_FEATURES, PLATFORM_ROLE_CHOICES, RESTAURANT_ROLE_CHOICES
 from restaurant.models import Restaurant
 
 from .models import Plan, PlatformPayment, PlatformSettings, Subscription
@@ -139,3 +140,37 @@ class PlatformSettingsForm(forms.ModelForm):
 
     def sections(self):
         return [(key, title, [self[f] for f in fields]) for key, title, fields in SETTINGS_SECTIONS]
+
+
+class UserAdminForm(forms.ModelForm):
+    """Super admin editing any login: name, contact, role, status, password."""
+
+    role = forms.ChoiceField()
+    password = forms.CharField(
+        required=False, min_length=6, widget=forms.PasswordInput(render_value=False),
+        label="New password", help_text="Leave empty to keep the current password.",
+    )
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "phone", "role", "is_active"]
+        labels = {"phone": "Mobile number (sign-in)", "is_active": "Login is active"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].required = True
+        self.fields["role"].choices = RESTAURANT_ROLE_CHOICES if self.instance.restaurant_id else PLATFORM_ROLE_CHOICES
+
+    def clean_phone(self):
+        return _clean_unique_phone(self, self.cleaned_data.get("phone"))
+
+    def clean_email(self):
+        return _clean_unique_email(self, self.cleaned_data.get("email"))
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data.get("password"):
+            user.set_password(self.cleaned_data["password"])
+        if commit:
+            user.save()
+        return user
