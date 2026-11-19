@@ -111,6 +111,13 @@ if DATABASE_URL:
     DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=0, conn_health_checks=True)}
     # Neon's pooled address runs PgBouncer in transaction mode.
     DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    # The direct (unpooled) address, when available, is used only to create
+    # tables at start-up: it allows a lock so two instances never migrate at once.
+    _direct = next((v for k, v in sorted(os.environ.items())
+                    if ("UNPOOLED" in k.upper() or "NON_POOLING" in k.upper())
+                    and v.startswith(("postgres://", "postgresql://"))), None)
+    if _direct:
+        DATABASES["direct"] = dj_database_url.parse(_direct, conn_max_age=0)
 else:
     DATABASES = {
         "default": {
