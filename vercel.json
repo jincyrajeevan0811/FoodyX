@@ -1,6 +1,13 @@
 {
   "builds": [
-    { "src": "foodyx/wsgi.py", "use": "@vercel/python", "config": { "maxLambdaSize": "15mb" } }
+    {
+      "src": "foodyx/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "includeFiles": ["templates/**", "static/**", "core/**", "saas/**", "restaurant/**", "storefront/**", "foodyx/**"]
+      }
+    }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "foodyx/wsgi.py" }
