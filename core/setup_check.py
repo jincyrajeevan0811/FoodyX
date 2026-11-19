@@ -87,6 +87,25 @@ def setup_page(exc):
     return HttpResponse(html, status=503)
 
 
+def error_page(exc):
+    """Short reason + where it happened (no settings, no variables)."""
+    import traceback
+
+    frames = traceback.extract_tb(exc.__traceback__)
+    ours = [f for f in frames if "site-packages" not in f.filename and "/python3" not in f.filename]
+    where = ours[-1] if ours else (frames[-1] if frames else None)
+    location = f"{where.filename.split('/var/task/')[-1]}, line {where.lineno}, in {where.name}" if where else "unknown"
+    text = str(exc).strip()
+    html = PAGE.format(
+        title="Something went wrong on this page",
+        intro="FoodyX hit an error while building this page. Send this box to your developer.",
+        steps=f"<li><b>Error:</b> <code>{escape(exc.__class__.__name__)}: {escape(text.splitlines()[0][:300] if text else '')}</code></li>"
+              f"<li><b>Where:</b> <code>{escape(location)}</code></li>",
+        detail="Set FOODYX_HIDE_ERRORS=1 in Vercel to show a plain error page instead.",
+    )
+    return HttpResponse(html, status=500)
+
+
 class SetupCheckMiddleware:
     retried = False
 
@@ -115,4 +134,7 @@ class SetupCheckMiddleware:
                 if prepare_database():
                     return HttpResponseRedirect(request.get_full_path())
             return setup_page(exception)
+        if getattr(settings, "ON_VERCEL", False) and os.environ.get("FOODYX_HIDE_ERRORS") != "1":
+            logger.exception("Error while serving %s", request.path)
+            return error_page(exception)
         return None
