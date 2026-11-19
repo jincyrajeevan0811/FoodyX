@@ -83,6 +83,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--fresh", action="store_true", help="Delete demo restaurants first.")
+        parser.add_argument("--days", type=int, default=14, help="Days of sample order history (default 14).")
 
     @transaction.atomic
     def handle(self, *args, **opts):
@@ -175,7 +176,7 @@ class Command(BaseCommand):
         popular = items[:]
         weights = [6 if m.is_featured else (3 if m.price < 100 else 2) for m in popular]
         waiters = staff["captain"] + staff["manager"]
-        for day in range(14, 0, -1):
+        for day in range(max(0, opts.get("days", 14)), 0, -1):
             for _ in range(rng.randint(14, 24)):
                 hour = rng.choice([8, 9, 12, 13, 13, 14, 19, 20, 20, 21, 21])
                 created = (now - timedelta(days=day)).replace(hour=hour, minute=rng.randint(0, 59))

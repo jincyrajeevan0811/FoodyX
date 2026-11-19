@@ -1,1 +1,5 @@
 Django>=5.0,<6.0
+# Production / Vercel (not needed for local SQLite, but harmless to install)
+whitenoise>=6.6
+dj-database-url>=2.1
+psycopg[binary]>=3.1

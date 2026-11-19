@@ -128,6 +128,24 @@ Until SMTP is saved in Platform settings, emails (welcome mails, password resets
 
 ---
 
+## Free hosting on Vercel
+
+The project is ready for Vercel's free **Hobby** plan with a free **Neon** Postgres database.
+Nothing changes locally: on your computer FoodyX keeps using SQLite.
+
+1. **Vercel → Add New → Project →** import this GitHub repo. Framework preset: **Other**. Deploy.
+2. In the project: **Storage → Connect Database → Neon** → choose region **Singapore** → connect it to the
+   project for **Production** and **Preview**, leave "Create database branch" **unticked**, prefix `DATABASE`.
+3. **Settings → Environment Variables →** add `FOODYX_SECRET_KEY` = a long random text.
+4. **Settings → Functions → Function Region →** **Singapore (sin1)**, to sit next to the database.
+5. **Deployments → ⋯ → Redeploy.** On the first start the site creates its tables and loads the demo data
+   automatically (admin / admin123, owner 9000000001 / demo123) — change these passwords afterwards.
+6. Sign in as admin and set **Platform settings → Site address** to your `https://…vercel.app` URL.
+
+Optional variables: `FOODYX_SEED_DEMO=0` (start with an empty platform instead of demo data),
+`FOODYX_DEBUG=1` (show Django error pages — only while troubleshooting).
+If something is missing, the site shows a "FoodyX setup" page explaining what to fix.
+
 ## Production checklist
 
 Set these environment variables:
