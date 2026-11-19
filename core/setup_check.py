@@ -9,7 +9,7 @@ import os
 
 from django.conf import settings
 from django.db.utils import DatabaseError
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.html import escape
 
 logger = logging.getLogger("foodyx.setup")
@@ -71,6 +71,11 @@ def classify(exc):
 
 def setup_page(exc):
     title, intro, steps = classify(exc)
+    if title == NOT_MIGRATED[0]:
+        from core import vercel_boot
+
+        if vercel_boot.LAST_ERROR:
+            steps = steps + [f"Last automatic setup error: <code>{escape(vercel_boot.LAST_ERROR)}</code>"]
     if title == NO_DB[0]:
         steps = steps + [f"Database variables this deployment can see: <code>{escape(_visible_db_vars())}</code>"]
     text = str(exc).strip()
@@ -83,6 +88,8 @@ def setup_page(exc):
 
 
 class SetupCheckMiddleware:
+    retried = False
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -93,5 +100,19 @@ class SetupCheckMiddleware:
         # Only on Vercel: locally you want Django's normal debug page.
         if getattr(settings, "ON_VERCEL", False) and isinstance(exception, DatabaseError):
             logger.exception("Database problem while serving %s", request.path)
+            # Tables missing: run the automatic setup again once per instance,
+            # then reload the page the visitor asked for.
+            if classify(exception) is NOT_MIGRATED and not SetupCheckMiddleware.retried:
+                SetupCheckMiddleware.retried = True
+                from django.db import connection
+
+                from core.vercel_boot import prepare_database
+
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+                if prepare_database():
+                    return HttpResponseRedirect(request.get_full_path())
             return setup_page(exception)
         return None
